@@ -1,0 +1,14 @@
+{
+  "name": "uoto-manga-reader",
+  "version": "7.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/serve.cjs",
+    "dev": "node scripts/serve.cjs",
+    "build": "node scripts/build.cjs",
+    "check": "node --check motion.js && node --check reader.js && node --check app.js && node --check assets.js && node --check scripts/serve.cjs && node --check scripts/build.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
