@@ -1,0 +1,88 @@
+/* 450 x 700 paper coordinates. The reader owns leaf transforms. */
+.race .leaf-content,.comparison .leaf-content,.orb .leaf-content,.characters .leaf-content,.nigami .leaf-content,.kaido .leaf-content,.quotation .leaf-content,.interpretation .leaf-content,.ending .leaf-content,.closing .leaf-content{padding:0}
+.race-visual,.quote-visual{position:absolute}
+.race .leaf-content>h2,.comparison .leaf-content>h2{position:absolute;left:28px;top:30px;width:394px;font-size:69px;line-height:1;margin:0}
+.race .distance{position:absolute;left:31px;top:111px;font:28px/1 var(--lettering);margin:0;padding:0;background:none;transform:none}
+.race .distance span{display:inline;font:inherit;margin-left:7px}
+.comparison .quiet-words{position:absolute;left:165px;top:139px;width:240px;font-size:24px;line-height:1.25;margin:0}
+.comparison .race-caption{position:absolute;left:165px;top:277px;width:245px;font-size:23px;line-height:1.25;margin:0}
+.comparison .race-caption p+p{margin-top:17px}
+.comparison-question{position:absolute;left:155px;top:425px;width:270px;height:225px;margin:0}
+.comparison-question>p{font-size:24px;line-height:1.14}
+.orb .leaf-content>h2{position:absolute;left:28px;top:29px;font-size:67px;line-height:1;margin:0}
+.belief-cover{position:absolute;left:28px;top:207px;width:218px;height:323px}
+.belief-cover>.art{inset:15px;clip-path:none;background:none}
+.orb .unframed-question{position:absolute;left:267px;top:224px;width:158px;font:33px/1.16 var(--display);margin:0}
+.orb-copy{position:absolute;left:35px;top:566px;width:380px;font-size:25px;line-height:1.25}
+.characters .leaf-content>h2{position:absolute;left:28px;top:30px;width:394px;font-size:51px;line-height:1.04;margin:0}
+.komiya-conversation{position:absolute;left:28px;top:201px;width:394px;height:255px}
+.komiya-conversation>.art{inset:8px;clip-path:none}
+.characters h3{position:absolute;left:28px;top:480px;font-size:54px}
+.characters .character-copy{position:absolute;left:72px;top:551px;width:340px;font-size:27px;line-height:1.25}
+.nigami .leaf-content>h2{position:absolute;left:28px;top:37px;font-size:60px;margin:0}
+.nigami-glance{position:absolute;left:35px;top:146px;width:370px;height:230px}
+.nigami-glance>.art{inset:20px;clip-path:none}
+.nigami .character-copy{position:absolute;left:55px;top:424px;width:340px;font-size:27px;line-height:1.25}
+.kaido .leaf-content>h2{position:absolute;left:270px;top:34px;font-size:60px;margin:0}
+.kaido-tall{position:absolute;left:28px;top:121px;width:245px;height:350px}
+.kaido-tall>.art{inset:12px;clip-path:none}
+.kaido .kaido-voice{position:absolute;left:290px;top:166px;width:133px;font-size:25px;line-height:1.25}
+.kaido .kaido-voice p+p{margin-top:37px}
+.courage-bubble{position:absolute;left:28px;top:493px;width:263px;height:170px;margin:0}
+.courage-bubble>p{font-size:25px}
+.quotation .leaf-content>h2{position:absolute;left:28px;top:26px;font-size:55px;line-height:1;margin:0}
+.quote-credit{position:absolute;left:31px;top:150px;font-size:17px;line-height:1.3;margin:0}
+.quote-balloon{position:absolute;left:28px;top:533px;width:394px;height:128px;margin:0}
+.quote-balloon>p{font:33px/.99 var(--display)}
+.quote-balloon em{font-size:1.12em}
+.interpretation-label{position:absolute;left:28px;top:25px;margin:0;font-size:22px}
+.interpretation-first{position:absolute;left:28px;top:67px;width:394px;max-width:none;font-size:25px;line-height:1.25;margin:0;padding:0;border:0;background:none}
+.interpretation-first em{font:39px/.95 var(--display);font-style:normal}
+.interpretation-first strong{font:32px/1.15 var(--display);background:var(--ink);color:white;padding:0 5px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.interpretation-next{position:absolute;left:28px;top:551px;width:394px;font-size:25px;line-height:1.3;margin:0}
+.interpretation-next strong{font:33px/1 var(--display);border-bottom:2px solid var(--red)}
+.mobile-quote-picture{display:none}
+.ending .leaf-content>h2{position:absolute;left:28px;top:24px;font-size:48px;line-height:1;margin:0}
+.ending-invitation{position:absolute;left:30px;top:127px;width:390px;font-size:23px;line-height:1.2;margin:0}
+.cover-impact{position:absolute;inset:0;pointer-events:none}
+.cover-impact>svg{position:absolute;inset:0;width:450px;height:700px}
+.cover-impact path{fill:none;stroke:var(--ink);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:miter}
+.cover-impact>.art{position:absolute;left:75px;top:182px;width:300px;height:435px;background:none;overflow:visible}
+.impact-orb>.art{top:193px;height:425px}
+.publisher-link{position:absolute;left:75px;top:641px;font:25px/1 var(--display);text-decoration:none;border-bottom:2px solid;padding-bottom:5px}
+.publisher-link>span[aria-hidden]{margin-left:10px}
+.final-balloon{position:absolute;left:28px;top:16px;width:394px;height:150px;margin:0}
+.final-balloon>p{font:33px/1.05 var(--display);top:43%;left:14%;width:72%}
+.closing .read-again{position:absolute;left:296px;top:644px;margin:0;font-size:19px;line-height:1}
+/* Pictures move once; lettering and gutters stay steady. */
+.opening-visual{transform:translateX(calc(var(--scene-rest,0) * 22px));will-change:auto}
+.race-visual{transform:scale(calc(1 + var(--scene-rest,0) * .035));transform-origin:25% 45%}
+.belief-cover>.art{transform:rotate(calc(var(--scene-rest,0) * -1.5deg)) translateY(calc(var(--scene-rest,0) * 10px))}
+.komiya-conversation>.art{transform:translateY(calc(var(--scene-rest,0) * 12px))}
+.nigami-glance>.art{transform:scale(calc(1.025 - var(--scene-rest,0) * .025))}
+.kaido-tall>.art{transform:translateY(calc(var(--scene-rest,0) * 12px)) scale(calc(1 + var(--scene-rest,0) * .02))}
+.reflection-visual{transform:translate(calc(var(--scene-rest,0) * 12px),calc(var(--scene-rest,0) * 7px))}
+.quote-visual{transform:translateY(calc(var(--scene-rest,0) * 9px))}
+.impact-100m>.art{transform:translateY(calc(var(--scene-rest,0) * 10px)) rotate(calc(var(--scene-rest,0) * -1.3deg)) scale(calc(1 + var(--scene-rest,0) * .025))}
+.impact-orb>.art{transform:translateY(calc(var(--scene-late-rest,0) * 12px)) rotate(calc(var(--scene-late-rest,0) * 1.3deg)) scale(calc(1 + var(--scene-late-rest,0) * .025))}
+.book-surface[data-motion-playing=true] .leaf:not([aria-hidden=true]) .scene-art{will-change:transform}
+/* Complete mobile beats, rather than half a shared picture. */
+.book-stage[data-mode=single] .race .spread-world{left:0;width:450px}
+.book-stage[data-mode=single] .race-visual{left:28px!important;top:220px!important;width:394px!important;height:334px!important}
+.book-stage[data-mode=single] .race-window .spread-outline{display:none}
+.book-stage[data-mode=single] .race .distance{top:124px;font-size:42px}
+.book-stage[data-mode=single] .comparison .race-window{display:none}
+.book-stage[data-mode=single] .comparison .quiet-words{left:35px;top:158px;width:380px;font-size:30px}
+.book-stage[data-mode=single] .comparison .race-caption{left:35px;top:337px;width:380px;font-size:25px}
+.book-stage[data-mode=single] .comparison-question{left:60px;top:458px;width:330px;height:205px}
+.book-stage[data-mode=single] .comparison-question>p{font-size:25px}
+.book-stage[data-mode=single] .quotation .quote-world{left:0;width:450px}
+.book-stage[data-mode=single] .quotation .quote-visual{left:28px!important;top:255px!important;width:394px!important;height:199px!important}
+.book-stage[data-mode=single] .quote-window .spread-outline{display:none}
+.book-stage[data-mode=single] .interpretation .quote-window{display:none}
+.book-stage[data-mode=single] .mobile-quote-picture{display:block;position:absolute;left:28px;top:245px;width:394px;height:199px}
+.book-stage[data-mode=single] .mobile-quote-picture>.art{position:absolute;inset:0;transform:translateY(calc(var(--scene-rest,0) * 7px))}
+.book-stage[data-mode=single] .interpretation-next{top:500px}
+.book-stage[data-mode=single] .mobile-word-picture>.art{transform:translateY(calc(var(--scene-rest,0) * 6px))}
+@media(prefers-reduced-motion:reduce){.scene-art,.opening-visual,.reflection-visual,.mobile-word-picture>.art{transform:none!important;clip-path:none!important;will-change:auto!important}}
+@media print{.scene-art,.opening-visual,.reflection-visual,.mobile-word-picture>.art{transform:none!important;clip-path:none!important}}
