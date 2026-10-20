@@ -35,6 +35,11 @@
  function control(selector,value,icon,after=false){const node=q(selector);if(!node)return;const span=node.querySelector('span');node.replaceChildren(...(after?[document.createTextNode(value+' '),span]:[span,document.createTextNode(' '+value)]).filter(Boolean));}
  function syncInterface(){
   const ui=data.locales[locale].ui;
+  document.querySelectorAll('[data-purchase-book]').forEach(link=>{
+   const destinations=data.purchaseLinks?.[link.dataset.purchaseBook];
+   const href=destinations?.[locale]||destinations?.ja;
+   if(href)link.href=href;
+  });
   document.documentElement.lang=locale;document.title=ui.title;
   q('meta[name="description"]')?.setAttribute('content',ui.description);
   text('.reader-brand>span',ui.brand);text('.skip-link',ui.skip);
