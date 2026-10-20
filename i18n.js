@@ -47,10 +47,10 @@
   text('.reading-hint',ui.hint);text('.motion-replay',ui.replay);text('.colophon summary',ui.credits);
   label('#contents','contents');label('.reader','reader');label('.book-stage','stage');label('.reader-controls','controls');label('.word-panels','choose');label('.page-prev','previous');label('.page-next','next');
   const footer=[...document.querySelectorAll('.colophon>p')];for(let n=0;n<footer.length;n++)nodeText(footer[n],ui['footer-'+n]);
-  const notes=[...document.querySelectorAll('.colophon details>p')];for(const n of [0,1,2,5])nodeText(notes[n],ui['note-'+n]);
-  if(notes[4]){const anchor=notes[4].querySelector('a');notes[4].replaceChildren(document.createTextNode(ui['note-4-prefix']),anchor,document.createTextNode(ui['note-4-suffix']));}
-  [...notes[3]?.querySelectorAll('a')||[]].forEach((a,index)=>nodeText(a,ui['guide-'+index]));
-  text('.colophon details>a',ui.reference);text('.noscript-message',ui.noscript);
+  document.querySelectorAll('.colophon [data-credit-note]').forEach(node=>nodeText(node,ui[node.dataset.creditNote]));
+  const licence=q('.colophon [data-credit-license]');
+  if(licence){const anchor=licence.querySelector('a');licence.replaceChildren(document.createTextNode(ui['note-4-prefix']),anchor,document.createTextNode(ui['note-4-suffix']));}
+  text('.noscript-message',ui.noscript);
   document.querySelectorAll('.sr-only').forEach(node=>{if(node.closest('.publisher-link'))node.textContent=ui.newtab;});
   document.querySelectorAll('.art-fallback').forEach(node=>{node.textContent=ui.art;});
   document.querySelectorAll('.language-switch button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.locale===locale)));

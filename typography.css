@@ -1,0 +1,381 @@
+/* CJK lettering on the original 450 x 700 sheets. Artwork, panel geometry,
+   English lettering and the reader's motion transforms stay in their own files. */
+html[lang="zh-Hant"] {
+  --display: 'Noto Serif TC', 'Noto Sans TC', serif;
+  --lettering: 'LXGW WenKai TC', 'Noto Sans TC', sans-serif;
+  --comic-voice-weight: 700;
+}
+html[lang="ja"] {
+  --display: 'Noto Serif JP', 'Yu Mincho', serif;
+  --lettering: 'Klee One', 'Yu Gothic', sans-serif;
+  --comic-voice-weight: 600;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .leaf-content {
+  font-synthesis: none;
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: normal;
+  text-wrap: pretty;
+  font-kerning: normal;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) :is(.reader-header, .contents, .reader-controls, .reader-help, .colophon) {
+  font-family: 'Noto Sans TC', 'Yu Gothic', sans-serif;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) :is(.reader-brand, .page-count, .mobile-opening-title, .opening-work) {
+  font-family: Bangers, Impact, sans-serif;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .reader-brand > span {
+  font-family: 'Noto Sans TC', 'Yu Gothic', sans-serif;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .opening-work > span:not([data-book-run]) {
+  font-family: var(--lettering);
+  font-weight: var(--comic-voice-weight);
+  letter-spacing: .08em;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .leaf-content :is(h1, h2, h3) {
+  font-family: var(--display);
+  font-weight: 900;
+  letter-spacing: .015em;
+  text-wrap: balance;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) :is(.balloon > p, .balloon > h1) {
+  font-weight: var(--comic-voice-weight);
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .opening-voice {
+  left: 32px;
+  top: 36px;
+  width: 350px;
+  font-size: 25px;
+  line-height: 1.52;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .opening-hook {
+  left: 24px;
+  top: 22px;
+  width: 400px;
+  height: 218px;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .opening-hook > h1 {
+  left: 9%;
+  width: 82%;
+  top: 44%;
+  font-family: var(--display);
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1.22;
+  letter-spacing: .025em;
+}
+html[lang="ja"] .opening-hook > h1 { font-size: 42px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .opening-finish-voice {
+  left: 220px;
+  top: 515px;
+  width: 200px;
+  padding: 12px;
+  font-size: 24px;
+  line-height: 1.5;
+}
+html[lang="ja"] .opening-finish-voice { font-size: 22px; }
+html:is([lang="zh-Hant"], [lang="ja"]) :is(.race, .comparison) .leaf-content > h2 {
+  top: 33px;
+  font-size: 48px;
+  line-height: 1.25;
+}
+html[lang="ja"] :is(.race, .comparison) .leaf-content > h2 { font-size: 45px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .race .distance {
+  top: 113px;
+  font-family: Bangers, Impact, sans-serif;
+  font-size: 34px;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .race .distance > span:not([data-book-run]) {
+  font-family: var(--lettering);
+  font-size: 22px;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .comparison .quiet-words {
+  left: 171px;
+  top: 132px;
+  width: 231px;
+  font-size: 23px;
+  line-height: 1.42;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .comparison .race-caption {
+  left: 171px;
+  top: 277px;
+  width: 236px;
+  font-size: 20.5px;
+  line-height: 1.4;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .comparison .race-caption p + p { margin-top: 12px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .comparison-question > p {
+  font-size: 24px;
+  line-height: 1.45;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .orb .leaf-content > h2 {
+  font-size: 58px;
+  line-height: 1.15;
+}
+html[lang="ja"] .orb .leaf-content > h2 { font-size: 44px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .orb .unframed-question {
+  left: 270px;
+  top: 235px;
+  width: 154px;
+  font-family: var(--display);
+  font-size: 27px;
+  font-weight: 900;
+  line-height: 1.5;
+  letter-spacing: .01em;
+  text-wrap: initial;
+}
+html[lang="ja"] .orb .unframed-question { left: 266px; width: 160px; font-size: 22px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .orb-copy {
+  left: 34px;
+  top: 555px;
+  width: 382px;
+  font-size: 23px;
+  line-height: 1.48;
+}
+html[lang="ja"] .orb-copy { font-size: 22px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .characters .leaf-content > h2 {
+  top: 32px;
+  font-size: 41px;
+  line-height: 1.3;
+}
+html[lang="ja"] .characters .leaf-content > h2 { font-size: 39px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .characters h3 {
+  top: 482px;
+  margin: 0;
+  font-size: 53px;
+  line-height: 1.15;
+  letter-spacing: .08em;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .characters .character-copy {
+  left: 74px;
+  top: 558px;
+  width: 335px;
+  font-size: 23px;
+  line-height: 1.48;
+}
+html[lang="ja"] .characters .character-copy { font-size: 22px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .nigami .leaf-content > h2 {
+  left: 32px;
+  top: 33px;
+  font-size: 57px;
+  line-height: 1.2;
+  letter-spacing: .08em;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .nigami .character-copy {
+  left: 53px;
+  top: 423px;
+  width: 340px;
+  font-size: 24px;
+  line-height: 1.55;
+}
+html[lang="ja"] .nigami .character-copy { font-size: 22px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .kaido .leaf-content > h2 {
+  left: 279px;
+  top: 35px;
+  font-size: 51px;
+  line-height: 1.25;
+  letter-spacing: .06em;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .kaido .kaido-voice {
+  left: 286px;
+  top: 162px;
+  width: 138px;
+  font-size: 22px;
+  line-height: 1.55;
+}
+html[lang="ja"] .kaido .kaido-voice { font-size: 21px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .kaido-voice > p + p { margin-top: 29px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .courage-bubble > p {
+  font-size: 24px;
+  line-height: 1.42;
+}
+html[lang="ja"] .courage-bubble > p { font-size: 22px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .words .leaf-content > h2 {
+  top: 29px;
+  font-size: 38px;
+  line-height: 1.3;
+}
+html[lang="ja"] .words .leaf-content > h2 { font-size: 34px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .words .interaction-hint {
+  top: 142px;
+  font-size: 18px;
+  line-height: 1.5;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .word-choice {
+  font-family: var(--display);
+  font-size: 33px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: .04em;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .reader-monologue > p {
+  font-size: 25px;
+  line-height: 1.5;
+  font-weight: var(--comic-voice-weight);
+}
+html[lang="ja"] .reader-monologue > p { font-size: 23px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .courage-spread-copy {
+  left: 34px;
+  top: 535px;
+  width: 375px;
+  font-size: 24px;
+  line-height: 1.5;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .courage-spread-copy strong {
+  font-family: var(--display);
+  font-size: 27px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+html[lang="ja"] .courage-spread-copy { font-size: 22px; }
+html[lang="ja"] .courage-spread-copy strong { font-size: 24px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .quotation .leaf-content > h2 {
+  top: 29px;
+  font-size: 43px;
+  line-height: 1.3;
+}
+html[lang="ja"] .quotation .leaf-content > h2 { font-size: 40px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .quote-credit {
+  top: 151px;
+  width: 389px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+html[lang="ja"] .quote-credit { font-size: 14px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .quote-balloon > p {
+  left: 17%;
+  width: 66%;
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.18;
+  letter-spacing: .02em;
+}
+html[lang="ja"] .quote-balloon > p { font-size: 23px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .quote-balloon em { font-size: 1.13em; }
+html:is([lang="zh-Hant"], [lang="ja"]) .interpretation-label {
+  top: 29px;
+  font-family: var(--lettering);
+  font-size: 20px;
+  font-weight: var(--comic-voice-weight);
+  letter-spacing: .04em;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .interpretation-first {
+  left: 31px;
+  top: 76px;
+  width: 384px;
+  font-size: 23px;
+  line-height: 1.55;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .interpretation-first em {
+  font-family: var(--display);
+  font-size: 31px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .interpretation-first strong {
+  font-family: var(--display);
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1.4;
+  padding: 1px 5px 2px;
+}
+html[lang="ja"] .interpretation-first { font-size: 21px; line-height: 1.5; }
+html[lang="ja"] .interpretation-first :is(em, strong) { font-size: 24px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .interpretation-next {
+  left: 31px;
+  top: 551px;
+  width: 384px;
+  font-size: 23px;
+  line-height: 1.6;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .interpretation-next strong {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) :is(.interpretation-first strong, .interpretation-next strong) {
+  display: inline-block;
+  white-space: nowrap;
+}
+html[lang="ja"] .interpretation-next { font-size: 21px; }
+html[lang="ja"] .interpretation-next strong { font-size: 24px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .ending .leaf-content > h2 {
+  top: 24px;
+  font-size: 37px;
+  line-height: 1.2;
+}
+html[lang="ja"] .ending .leaf-content > h2 { font-size: 37px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .ending-invitation {
+  top: 124px;
+  font-size: 19.5px;
+  line-height: 1.3;
+}
+html[lang="ja"] .ending-invitation { font-size: 19px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .publisher-link {
+  top: 640px;
+  font-family: var(--lettering);
+  font-size: 24px;
+  font-weight: var(--comic-voice-weight);
+  line-height: 1.25;
+}
+html[lang="ja"] .publisher-link { font-size: 21px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .final-balloon > p {
+  font-family: var(--display);
+  font-size: 27px;
+  font-weight: 900;
+  line-height: 1.38;
+  letter-spacing: .01em;
+}
+html[lang="ja"] .final-balloon > p { font-size: 25px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .closing .read-again {
+  top: 646px;
+  font-size: 17px;
+  line-height: 1.2;
+}
+/* Each phone page remains a whole composition, inside the reader's scaling. */
+html[lang="ja"] :is(.reader-header, .contents, .reader-controls, .reader-help, .colophon) {
+  font-family: 'Yu Gothic', 'Hiragino Kaku Gothic ProN', sans-serif;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .mobile-opening-title {
+  font-family: Bangers, var(--display);
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .opening-voice {
+  left: 32px;
+  top: 148px;
+  width: 386px;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .opening-hook {
+  top: 426px;
+  left: 25px;
+  height: 225px;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .opening-finish-voice {
+  top: 34px;
+  left: 30px;
+  width: 375px;
+  font-size: 25px;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .race .distance { top: 123px; font-size: 44px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .comparison .quiet-words {
+  left: 36px;
+  top: 150px;
+  width: 377px;
+  font-size: 25px;
+  line-height: 1.4;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .comparison .race-caption {
+  left: 36px;
+  top: 307px;
+  width: 377px;
+  font-size: 22px;
+  line-height: 1.4;
+}
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .comparison-question > p { font-size: 25px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .words .leaf-content > h2 { top: 28px; font-size: 37px; }
+html[lang="ja"] .book-stage[data-mode="single"] .words .leaf-content > h2 { font-size: 33px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .words .interaction-hint { top: 126px; font-size: 18px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .words .word-panels { top: 167px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .courage-spread-copy { top: 433px; width: 366px; }
+html:is([lang="zh-Hant"], [lang="ja"]) .book-stage[data-mode="single"] .interpretation-next { top: 506px; }

@@ -58,7 +58,7 @@
     for (const word of wordNames) {
       if (!reflections[word]) continue;
       const id = 'word-' + word;
-      remember(thought,id,9,`互動感想 · ${word}`,{text:reflections[word].text,variant:word,pages:[9,10]});
+      remember(thought,id,leaves.findIndex(leaf=>leaf.classList.contains('words'))+1,`互動感想 · ${word}`,{text:reflections[word].text,variant:word,pages:leaves.flatMap((leaf,index)=>leaf.matches('.words,.pause')?[index+1]:[])});
     }
   }
   function safeStyle(input) {
