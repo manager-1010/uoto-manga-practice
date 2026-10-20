@@ -5,7 +5,7 @@
     const button=event.target.closest('[data-word]');if(!button)return;
     const word=button.dataset.word,selection=reflections[word];
     document.querySelectorAll('[data-word]').forEach(other=>other.setAttribute('aria-pressed',String(other.dataset.word===word)));
-    document.querySelectorAll('.monologue-text').forEach(text=>text.textContent=selection.text);
+    if (!window.mangaText?.selectWord(word)) document.querySelectorAll('.monologue-text').forEach(text=>text.textContent=selection.text);
     document.querySelectorAll('.word-art').forEach(frame=>showArt(frame,selection.art,true));
     document.querySelectorAll('.selection-art-description').forEach(node=>node.textContent=window.MANGA_ASSETS[selection.art].alt);
     window.comicMotion?.selection();
@@ -112,6 +112,7 @@
     settings.useMouseEvents=true;busy=false;syncBook();
   });
   new ResizeObserver(()=>{if(book)requestAnimationFrame(syncBook);}).observe(stage);
+  window.addEventListener('manga:languagechange',syncBook);
   initBook();
 })();
 
