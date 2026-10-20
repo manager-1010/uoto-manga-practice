@@ -5,6 +5,15 @@ const languages=['zh-Hant','en','ja'];
 function loadTranslations(root=path.resolve(__dirname,'..')){
  const data=JSON.parse(fs.readFileSync(path.join(root,'content/translations.json'),'utf8'));
  if(data.schemaVersion!==1||data.defaultLocale!=='zh-Hant')throw new Error('Unsupported translation schema');
+ for(const book of ['100m','orb']){
+  const links=data.purchaseLinks?.[book];
+  if(!links?.ja||typeof links.ja!=='string')throw new Error('Missing Japanese purchase fallback: '+book);
+  for(const lang of languages){
+   const value=links[lang];if(value===undefined||value==='')continue;
+   let address;try{address=new URL(value);}catch{throw new Error('Invalid purchase link: '+book+'/'+lang);}
+   if(typeof value!=='string'||address.protocol!=='https:'||!address.hostname)throw new Error('Purchase links must use HTTPS: '+book+'/'+lang);
+  }
+ }
  const ids=[...fs.readFileSync(path.join(root,'index.html'),'utf8').matchAll(/data-book-text="(p\d+-t\d+)"/g)].map(m=>m[1]);
  ids.push(...['perseverance','giving-up','confidence','goal','reality'].map(w=>'word-'+w));
  for(const lang of languages){

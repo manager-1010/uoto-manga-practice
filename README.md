@@ -12,6 +12,10 @@
 
 三語文字的原始資料在 `content/translations.json`。以穩定文字ID對應頁面；保留每個語言的相同ID。`content/translations.js` 是產生檔，不直接修改。漫畫圖片內的原有文字保留。
 
+最後兩頁的購買網址也在同檔的 `purchaseLinks`：繁中連香港「紙本分格」書店商品頁，日文連講談社／小學館官方商品頁，英文連 Simon & Schuster／Seven Seas 官方商品頁。未設定相應語言網址時回退至該書的日文官方頁。保留原有按鈕文字及排版。
+
+2026-10-21 查證：英文《100 Meters Vol. 1》由 Nakama Press 出版、Simon & Schuster 發行，官方頁目前標示2027-02-16出版；這個連結不代表已上市。其餘網址及版本資料見 `purchaseLinks` 中的實際官方商品頁。
+
 執行 `npm run check` 及 `npm run build` 後，公開產物在 `dist/`。建置採乾淨暫存目錄，上一份產物保留在本機 `.build-history/`，不把舊檔混入新版本。建置不需要新增套件。
 
 Cloudflare Pages沿用既有GitHub連接、`main`正式分支及原本建置設定。工作分支先產生預覽，合併後才更新正式網站。

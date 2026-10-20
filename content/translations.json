@@ -404,5 +404,17 @@
         "art-reality": "原作『ひゃくえむ。』の海棠。"
       }
     }
+  },
+  "purchaseLinks": {
+    "100m": {
+      "zh-Hant": "https://zbfghk.org/store/魚豊《一百公尺。-100M-》新裝版（全上／下兩期）-p617633753",
+      "en": "https://www.simonandschuster.com/books/100-Meters-Vol-1/Uoto/100-Meters/9781545838464",
+      "ja": "https://www.kodansha.co.jp/comic/products/0000323414"
+    },
+    "orb": {
+      "zh-Hant": "https://zbfghk.org/store/魚豊《地。-關於地球的運動-》第-1-期-p479505350",
+      "en": "https://sevenseasentertainment.com/books/orb-on-the-movements-of-the-earth-omnibus-vol-1-2/",
+      "ja": "https://shogakukan-comic.jp/book?isbn=9784098607785"
+    }
   }
 }
