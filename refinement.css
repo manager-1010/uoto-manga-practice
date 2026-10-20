@@ -1,0 +1,59 @@
+/* Red marks sit in reserved whitespace, outside original manga lettering. */
+html[lang="zh-Hant"] { --lettering:'Chiron Sung HK WS','Noto Sans TC',serif; }
+.story-accent { position:absolute;inset:0;width:450px;height:700px;z-index:0;pointer-events:none;overflow:visible; }
+.story-accent .accent-solid { fill:var(--red);stroke:none; }
+.story-accent .accent-line { fill:none;stroke:var(--red);stroke-width:2;stroke-linecap:square; }
+.story-accent .accent-faint { fill:none;stroke:var(--red);stroke-width:1;opacity:.22; }
+.story-accent .orbit-arc { stroke-width:1.6; }
+/* Keep the balloon's tail above the original 勝て lettering. */
+.book-stage[data-mode="spread"] .opening-hook { top:12px;height:188px; }
+.quote-credit[hidden] { display:none; }
+html:is([lang="zh-Hant"],[lang="ja"]) .comparison-question { left:145px;top:428px;width:285px;height:222px; }
+html:is([lang="zh-Hant"],[lang="ja"]) .comparison-question > p { left:8%;width:84%;font-size:25px;line-height:1.45; }
+html[lang="ja"] .comparison-question > p { font-size:21px;line-height:1.45; }
+html[lang="zh-Hant"] .characters .character-copy { top:545px;font-size:22px;line-height:1.45; }
+html[lang="ja"] .characters .character-copy { top:545px;font-size:21px;line-height:1.45; }
+html[lang="en"] .characters .character-copy { top:545px;font-size:25px;line-height:1.3; }
+html[lang="zh-Hant"] .nigami .character-copy { font-size:23px;line-height:1.5; }
+html[lang="ja"] .nigami .character-copy { font-size:22px;line-height:1.5; }
+html[lang="en"] .nigami .character-copy { font-size:25px;line-height:1.3; }
+html[lang="zh-Hant"] .kaido .kaido-voice { font-size:21px;line-height:1.5; }
+html[lang="ja"] .kaido .kaido-voice { font-size:20px;line-height:1.5; }
+html[lang="ja"] .kaido .kaido-voice { font-size:19px; }
+html[lang="ja"] .book-stage[data-mode="spread"] .opening-finish-voice { font-size:21px;letter-spacing:0; }
+html[lang="en"] .kaido .kaido-voice { font-size:23px;line-height:1.25; }
+.togashi .leaf-content,.zaitsu .leaf-content { padding:0; }
+.togashi .leaf-content > h2,.zaitsu .leaf-content > h2 {
+  position:absolute;left:28px;top:31px;width:394px;margin:0;
+  font:64px/1.1 var(--display);letter-spacing:.02em;
+}
+.character-question { position:absolute;left:31px;top:116px;width:385px;font:31px/1.15 var(--display);margin:0; }
+.new-character-visual { position:absolute;left:28px;width:394px;background:none; }
+.togashi-visual { top:191px;height:310px;transform:translateY(calc(var(--scene-rest,0) * 8px)); }
+.zaitsu-visual { top:222px;height:285px;transform:translateY(calc(var(--scene-rest,0) * 8px)); }
+.new-character-copy { position:absolute;left:42px;top:528px;width:365px;font:22px/1.4 var(--lettering); }
+html[lang="en"] .zaitsu .new-character-copy { top:518px;font-size:21px;line-height:1.35; }
+html .book-stage .leaf [data-comic-word] { display:inline;font:inherit;letter-spacing:inherit;margin:0;padding:0;white-space:nowrap; }
+html:is([lang="zh-Hant"],[lang="ja"]) :is(.togashi,.zaitsu) .leaf-content > h2 {
+  font-family:var(--display);font-size:57px;line-height:1.2;font-weight:900;letter-spacing:.045em;
+}
+html:is([lang="zh-Hant"],[lang="ja"]) .character-question {
+  font-family:var(--lettering);font-weight:var(--comic-voice-weight);font-size:25px;line-height:1.4;
+}
+html[lang="ja"] .character-question { font-size:23px; }
+html:is([lang="zh-Hant"],[lang="ja"]) .new-character-copy { font-size:22px;line-height:1.5;font-weight:400; }
+html[lang="ja"] .new-character-copy { font-size:21px;line-height:1.5; }
+html:is([lang="zh-Hant"],[lang="ja"]) .quotation .leaf-content > h2 { width:394px; }
+html:is([lang="zh-Hant"],[lang="ja"]) .interpretation-first strong { border-left:3px solid var(--red);padding-left:7px; }
+.book-stage[data-mode="single"] .accent-comparison { display:none; }
+.book-stage[data-mode="single"] .comparison .leaf-content::after {
+  content:'';position:absolute;left:24px;top:158px;width:3px;height:127px;background:var(--red);pointer-events:none;
+}
+html:is([lang="zh-Hant"],[lang="ja"]) .book-stage[data-mode="single"] .comparison-question { left:38px;top:458px;width:374px;height:205px; }
+html:is([lang="zh-Hant"],[lang="ja"]) .book-stage[data-mode="single"] .comparison-question > p { left:10%;width:80%;font-size:25px;line-height:1.45; }
+html[lang="ja"] .book-stage[data-mode="single"] .comparison-question > p { font-size:21px; }
+.book-stage[data-mode="single"] .accent-quotation { transform:translateY(5px); }
+.book-stage[data-mode="single"] .accent-pause { transform:translateY(110px); }
+.book-stage[data-mode="single"] .accent-finish { transform:translateY(-5px); }
+@media(prefers-reduced-motion:reduce) { .new-character-visual { transform:none!important; } }
+@media print { .new-character-visual { transform:none!important; } }

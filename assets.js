@@ -1,6 +1,8 @@
 /* All artwork is original manga. Crop rectangles are percentages of the source image.
    English interface text never covers the artwork. Change src, alt, source and crop together. */
 window.MANGA_ASSETS = {
+  togashiSocial: {src:'public/assets/manga/togashi-social-running.jpg',alt:'Togashi among schoolmates in Uoto’s original black-and-white manga; the original caption is complete.',source:'https://news.kodansha.co.jp/comics/7692',credit:'100M original manga · Uoto / Kodansha',ratio:'637/615'},
+  zaitsuGrey: {src:'public/assets/manga/zaitsu-grey-dialogue.jpg',alt:'Zaitsu with a microphone in the original manga, with both Japanese speech balloons shown in full.',source:'https://pocket.shonenmagazine.com/article/entry/hyakuemu_20190811',credit:'100M original manga · Uoto / Kodansha',ratio:'1125/812'},
   komiyaBreath: {src:'public/assets/manga/komiya-early-dialogue.jpg',alt:'Komiya catches his breath, one hand raised to his mouth.',source:'https://news.kodansha.co.jp/comics/7692',credit:'100M original manga · Uoto / Kodansha',crop:{x:1.1158,y:47.5973,w:39.0516,h:50.3432},ratio:'280/220'},
   nigamiEyes: {src:'public/assets/manga/nigami-record-dialogue.jpg',alt:'Nigami’s eye in a tight, silent reaction close-up.',source:'https://news.kodansha.co.jp/comics/7692',credit:'100M original manga · Uoto / Kodansha',crop:{x:.5602,y:61.3793,w:46.2185,h:28.2759},ratio:'330/205'},
   runningFeet: {src:'public/assets/manga/komiya-speed.jpg',alt:'The runner’s lower legs and both shoes cut through the original motion lines, with sound-effect lettering outside the crop.',source:'https://news.kodansha.co.jp/comics/7770',credit:'100M original manga · Uoto / Kodansha',crop:{x:1.1561,y:50.9626,w:97.6879,h:47.5651},ratio:'1014/420'},
