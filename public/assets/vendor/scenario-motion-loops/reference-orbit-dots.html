@@ -1,0 +1,133 @@
+<!doctype html>
+<!--
+  24 Orbit Dots
+  Concentric rings of dots; each turn ripples outward ring by ring, bending twelve bright spokes into a
+  spiral and straightening them again.
+
+  40 Motion Backgrounds for AI video
+  Made in code with Claude Opus 5.5 for Scenario · scenario.com
+
+  How to use: open this file in a browser. Change the colours in P and the size in W and H.
+  It loops every 12 seconds. Space pauses. Add ?t=4.5 to the address to show one frame.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>24 Orbit Dots</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+</style>
+</head>
+<body>
+<canvas></canvas>
+<script>
+const W = 1920, H = 1080; // size in pixels
+
+// Colours (the dark version from the pack).
+const P = {
+  bg: '#161616',  // background
+  fg: '#FF6FA8',  // main colour
+  fg2: '#F2EFE9', // second colour
+};
+
+// ---------- Helpers ----------
+
+const LOOP = 12;
+const TAU = Math.PI * 2;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const fract = (x) => x - Math.floor(x);
+
+// Phase 0..1 of a cycle of `period` seconds (period must divide LOOP: 1, 1.5, 2, 3, 4, 6, 12).
+const phase = (t, period = LOOP, offset = 0) => fract((t + offset) / period);
+
+// Progress 0..1 of a window [a, b] inside a 0..1 phase.
+const win = (p, a, b) => clamp((p - a) / (b - a));
+
+const ease = {
+  inOutCubic: (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2),
+};
+
+// Colour helpers (hex or rgb() strings in, css strings out).
+// Accepts '#rgb', '#rrggbb' or 'rgb(r,g,b)' / 'rgba(r,g,b,a)'.
+const hexToRgb = (h) => {
+  if (h.startsWith('rgb')) return h.slice(h.indexOf('(') + 1, h.indexOf(')')).split(',').slice(0, 3).map((v) => Math.round(parseFloat(v)));
+  h = h.replace('#', ''); if (h.length === 3) h = h.split('').map((c) => c + c).join(''); const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+const mixColor = (h1, h2, k) => { const a = hexToRgb(h1), b = hexToRgb(h2); const c = a.map((v, i) => Math.round(lerp(v, b[i], k))); return `rgb(${c[0]},${c[1]},${c[2]})`; };
+
+// Drawing helpers.
+const circle = (ctx, x, y, r) => { ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, TAU); };
+
+const M = { mixColor, circle }; // the tile calls these as M.name
+
+const dot = (path, x, y, r) => { path.moveTo(x + r, y); path.arc(x, y, r, 0, TAU); };
+
+// ---------- The tile ----------
+// One frame at time t (seconds, 0 to 12). w and h are the size, P the colours.
+
+function draw(ctx, w, h, t, P) {
+  const u = h / 100, cx = w / 2, cy = h / 2;
+  const g = 6.6 * u, sp = 3.9 * u, rd = 0.95 * u, S = 12;
+  const K = Math.ceil(Math.hypot(w, h) / 2 / g) + 1;
+  const per = 4, p = phase(t, per), cyc = Math.floor(t / per);
+  const field = new Path2D(), spoke = new Path2D();
+  for (let k = 1; k <= K; k++) {
+    const r = k * g;
+    const n = S * Math.max(1, Math.round((TAU * r) / (S * sp)));
+    const d0 = 0.38 * ((k - 1) / (K - 1));
+    const rot = (cyc + ease.inOutCubic(win(p, d0, d0 + 0.5))) * (TAU / 3);
+    const every = n / S;
+    for (let j = 0; j < n; j++) {
+      const a = (j / n) * TAU + rot;
+      const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+      if (x < -2 * u || x > w + 2 * u || y < -2 * u || y > h + 2 * u) continue;
+      if (j % every === 0) dot(spoke, x, y, rd * 1.35); else dot(field, x, y, rd);
+    }
+  }
+  ctx.fillStyle = M.mixColor(P.bg, P.fg, 0.42); ctx.fill(field);
+  ctx.fillStyle = P.fg; ctx.fill(spoke);
+  ctx.fillStyle = P.fg2; M.circle(ctx, cx, cy, 2 * u); ctx.fill();
+}
+
+// ---------- Runner ----------
+// The canvas is W x H (times the screen pixel ratio, for sharpness), scaled by CSS to fit the window.
+// window.__draw(t) renders the frame at t seconds; ?t=<seconds> in the address shows only that frame.
+const canvas = document.querySelector('canvas');
+const ratio = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = Math.round(W * ratio);
+canvas.height = Math.round(H * ratio);
+const context = canvas.getContext('2d');
+document.body.style.background = P.bg;
+
+window.__draw = (t) => {
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.fillStyle = P.bg;
+  context.fillRect(0, 0, W, H);
+  context.save();
+  context.beginPath();
+  draw(context, W, H, ((t % 12) + 12) % 12, P);
+  context.restore();
+};
+
+const still = new URLSearchParams(location.search).get('t');
+if (still !== null) {
+  window.__draw(parseFloat(still) || 0);
+} else {
+  let time = 0, last = performance.now(), paused = false;
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { paused = !paused; e.preventDefault(); }
+  });
+  requestAnimationFrame(function frame(now) {
+    if (!paused) time += (now - last) / 1000;
+    last = now;
+    window.__draw(time % 12);
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>

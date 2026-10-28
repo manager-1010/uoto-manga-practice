@@ -1,0 +1,134 @@
+<!doctype html>
+<!--
+  11 Line Burst
+  A sunburst of long and short rays; breaks ripple outward through it in eased waves.
+
+  40 Motion Backgrounds for AI video
+  Made in code with Claude Opus 5.5 for Scenario · scenario.com
+
+  How to use: open this file in a browser. Change the colours in P and the size in W and H.
+  It loops every 12 seconds. Space pauses. Add ?t=4.5 to the address to show one frame.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 Line Burst</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+</style>
+</head>
+<body>
+<canvas></canvas>
+<script>
+const W = 1920, H = 1080; // size in pixels
+
+// Colours (the light version from the pack).
+const P = {
+  bg: '#F2EFE9',  // background
+  fg: '#0F0F0F',  // main colour
+  fg2: '#FF5A1F', // second colour
+};
+
+// ---------- Helpers ----------
+
+const LOOP = 12;
+const TAU = Math.PI * 2;
+const lerp = (a, b, k) => a + (b - a) * k;
+const fract = (x) => x - Math.floor(x);
+
+// Phase 0..1 of a cycle of `period` seconds (period must divide LOOP: 1, 1.5, 2, 3, 4, 6, 12).
+const phase = (t, period = LOOP, offset = 0) => fract((t + offset) / period);
+
+const ease = {
+  inOutSine: (k) => -(Math.cos(Math.PI * k) - 1) / 2,
+  outCubic: (k) => 1 - Math.pow(1 - k, 3),
+};
+
+// Drawing helpers.
+const circle = (ctx, x, y, r) => { ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, TAU); };
+
+const M = { circle }; // the tile calls these as M.name
+
+// ---------- The tile ----------
+// One frame at time t (seconds, 0 to 12). w and h are the size, P the colours.
+
+function draw(ctx, w, h, t, P) {
+  const u = h / 100, cx = w / 2, cy = h / 2;
+  const N = 48, R0 = 12 * u, R1 = Math.hypot(w, h) / 2 + 6 * u, Rs = R0 + 0.42 * (R1 - R0) * (h / Math.hypot(w, h)) * 2.2;
+  // Two breaks in flight at once; each eases from the core to beyond the corners.
+  const per = 3, gaps = [];
+  for (let g = 0; g < 2; g++) {
+    const k = phase(t, per, g * per / 2);
+    const e = ease.inOutSine(k);
+    gaps.push([lerp(R0 - 6 * u, R1 + 6 * u, e), lerp(1.2, 9, e) * u]);
+  }
+  const pa = new Path2D();
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * TAU - Math.PI / 2;
+    const end = i % 2 ? Math.min(Rs, R1) : R1;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    // Visible pieces of [R0, end] minus the gaps.
+    let segs = [[R0, end]];
+    for (const [gc, gw] of gaps) {
+      const g0 = gc - gw / 2, g1 = gc + gw / 2, next = [];
+      for (const [s0, s1] of segs) {
+        if (g1 <= s0 || g0 >= s1) { next.push([s0, s1]); continue; }
+        if (g0 > s0) next.push([s0, g0]);
+        if (g1 < s1) next.push([g1, s1]);
+      }
+      segs = next;
+    }
+    for (const [s0, s1] of segs) {
+      if (s1 - s0 < 0.3 * u) continue;
+      pa.moveTo(cx + ca * s0, cy + sa * s0); pa.lineTo(cx + ca * s1, cy + sa * s1);
+    }
+  }
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 0.7 * u;
+  ctx.strokeStyle = P.fg; ctx.stroke(pa);
+  // The source: an accent disc that kicks as each wave leaves it.
+  const kick = Math.max(...[0, 1].map((g) => { const k = phase(t, per, g * per / 2); return k < 0.25 ? 1 - ease.outCubic(k / 0.25) : 0; }));
+  ctx.fillStyle = P.fg2;
+  M.circle(ctx, cx, cy, (3.2 + 1.6 * kick) * u); ctx.fill();
+}
+
+// ---------- Runner ----------
+// The canvas is W x H (times the screen pixel ratio, for sharpness), scaled by CSS to fit the window.
+// window.__draw(t) renders the frame at t seconds; ?t=<seconds> in the address shows only that frame.
+const canvas = document.querySelector('canvas');
+const ratio = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = Math.round(W * ratio);
+canvas.height = Math.round(H * ratio);
+const context = canvas.getContext('2d');
+document.body.style.background = P.bg;
+
+window.__draw = (t) => {
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.fillStyle = P.bg;
+  context.fillRect(0, 0, W, H);
+  context.save();
+  context.beginPath();
+  draw(context, W, H, ((t % 12) + 12) % 12, P);
+  context.restore();
+};
+
+const still = new URLSearchParams(location.search).get('t');
+if (still !== null) {
+  window.__draw(parseFloat(still) || 0);
+} else {
+  let time = 0, last = performance.now(), paused = false;
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { paused = !paused; e.preventDefault(); }
+  });
+  requestAnimationFrame(function frame(now) {
+    if (!paused) time += (now - last) / 1000;
+    last = now;
+    window.__draw(time % 12);
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>

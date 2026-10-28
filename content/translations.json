@@ -133,7 +133,11 @@
         "art-giving-up": "Nigami, an original manga portrait.",
         "art-confidence": "A character’s expression in the original manga.",
         "art-goal": "Runners sharing the same track.",
-        "art-reality": "Kaido in an original manga panel."
+        "art-reality": "Kaido in an original manga panel.",
+        "music-heading": "Music source",
+        "music-title": "Background music: Official髭男dism「らしさ」",
+        "music-context": "Theme song from 100M / Original: 劇場アニメ『ひゃくえむ。』主題歌",
+        "music-source": "Official audio: Official髭男dism - らしさ [Official Audio]"
       }
     },
     "zh-Hant": {
@@ -267,7 +271,11 @@
         "art-giving-up": "《100M》原作中的仁神。",
         "art-confidence": "原作人物的一個表情。",
         "art-goal": "同一條跑道上的跑手。",
-        "art-reality": "《100M》原作中的海棠。"
+        "art-reality": "《100M》原作中的海棠。",
+        "music-heading": "背景音樂來源",
+        "music-title": "背景音樂：Official髭男dism「らしさ」",
+        "music-context": "電影《100M》主題歌／原文：劇場アニメ『ひゃくえむ。』主題歌",
+        "music-source": "官方音源：Official髭男dism - らしさ [Official Audio]"
       }
     },
     "ja": {
@@ -401,7 +409,11 @@
         "art-giving-up": "原作『ひゃくえむ。』の仁神。",
         "art-confidence": "原作に描かれた人物の表情。",
         "art-goal": "同じトラックを走る走者たち。",
-        "art-reality": "原作『ひゃくえむ。』の海棠。"
+        "art-reality": "原作『ひゃくえむ。』の海棠。",
+        "music-heading": "音楽の出典",
+        "music-title": "BGM：Official髭男dism「らしさ」",
+        "music-context": "劇場アニメ『ひゃくえむ。』主題歌",
+        "music-source": "公式音源：Official髭男dism - らしさ [Official Audio]"
       }
     }
   },

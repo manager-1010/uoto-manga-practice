@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  35 Arc Rotation
+  Concentric thick arcs spin at different whole-turn speeds and lock back into line.
+
+  40 Motion Backgrounds for AI video
+  Made in code with Claude Opus 5.5 for Scenario · scenario.com
+
+  How to use: open this file in a browser. Change the colours in P and the size in W and H.
+  It loops every 12 seconds. Space pauses. Add ?t=4.5 to the address to show one frame.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>35 Arc Rotation</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+</style>
+</head>
+<body>
+<canvas></canvas>
+<script>
+const W = 1920, H = 1080; // size in pixels
+
+// Colours (the light version from the pack).
+const P = {
+  bg: '#F2EFE9',  // background
+  fg: '#0F0F0F',  // main colour
+  fg2: '#FFB800', // second colour
+};
+
+// ---------- Helpers ----------
+
+const LOOP = 12;
+const TAU = Math.PI * 2;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const fract = (x) => x - Math.floor(x);
+
+// Phase 0..1 of a cycle of `period` seconds (period must divide LOOP: 1, 1.5, 2, 3, 4, 6, 12).
+const phase = (t, period = LOOP, offset = 0) => fract((t + offset) / period);
+
+// Progress 0..1 of a window [a, b] inside a 0..1 phase.
+const win = (p, a, b) => clamp((p - a) / (b - a));
+
+const ease = {
+  inOutCubic: (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2),
+};
+
+// ---------- The tile ----------
+// One frame at time t (seconds, 0 to 12). w and h are the size, P the colours.
+
+function draw(ctx, w, h, t, P) {
+  const u = h / 100, cx = w / 2, cy = h / 2;
+  const rings = [
+    { r: 42, span: 0.72, n: 1 },
+    { r: 34.4, span: 0.5, n: -1 },
+    { r: 26.8, span: 0.8, n: 2, acc: true },
+    { r: 19.2, span: 0.6, n: -1 },
+    { r: 11.6, span: 0.75, n: 1 },
+  ];
+  const p = phase(t, 6);
+  ctx.lineCap = 'round'; ctx.lineWidth = 5 * u;
+  rings.forEach((R, i) => {
+    const k = ease.inOutCubic(win(p, 0.02 + i * 0.03, 0.82 + i * 0.03));
+    const a = R.n * TAU * k;
+    const g = (1 - R.span) * TAU;
+    ctx.strokeStyle = R.acc ? P.fg2 : P.fg;
+    ctx.beginPath(); ctx.arc(cx, cy, R.r * u, a + g / 2, a + TAU - g / 2); ctx.stroke();
+  });
+}
+
+// ---------- Runner ----------
+// The canvas is W x H (times the screen pixel ratio, for sharpness), scaled by CSS to fit the window.
+// window.__draw(t) renders the frame at t seconds; ?t=<seconds> in the address shows only that frame.
+const canvas = document.querySelector('canvas');
+const ratio = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = Math.round(W * ratio);
+canvas.height = Math.round(H * ratio);
+const context = canvas.getContext('2d');
+document.body.style.background = P.bg;
+
+window.__draw = (t) => {
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.fillStyle = P.bg;
+  context.fillRect(0, 0, W, H);
+  context.save();
+  context.beginPath();
+  draw(context, W, H, ((t % 12) + 12) % 12, P);
+  context.restore();
+};
+
+const still = new URLSearchParams(location.search).get('t');
+if (still !== null) {
+  window.__draw(parseFloat(still) || 0);
+} else {
+  let time = 0, last = performance.now(), paused = false;
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { paused = !paused; e.preventDefault(); }
+  });
+  requestAnimationFrame(function frame(now) {
+    if (!paused) time += (now - last) / 1000;
+    last = now;
+    window.__draw(time % 12);
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>

@@ -53,6 +53,8 @@
   label('#contents','contents');label('.reader','reader');label('.book-stage','stage');label('.reader-controls','controls');label('.word-panels','choose');label('.page-prev','previous');label('.page-next','next');
   const footer=[...document.querySelectorAll('.colophon>p')];for(let n=0;n<footer.length;n++)nodeText(footer[n],ui['footer-'+n]);
   document.querySelectorAll('.colophon [data-credit-note]').forEach(node=>nodeText(node,ui[node.dataset.creditNote]));
+  document.querySelectorAll('.colophon [data-music-copy]').forEach(node=>nodeText(node,ui[node.dataset.musicCopy]));
+  q('.music-credit')?.setAttribute('aria-label',ui['music-heading']);
   const licence=q('.colophon [data-credit-license]');
   if(licence){const anchor=licence.querySelector('a');licence.replaceChildren(document.createTextNode(ui['note-4-prefix']),anchor,document.createTextNode(ui['note-4-suffix']));}
   text('.noscript-message',ui.noscript);

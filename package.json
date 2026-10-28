@@ -1,12 +1,12 @@
 {
   "name": "uoto-manga-reader",
-  "version": "7.1.0",
+  "version": "19.0.0",
   "private": true,
   "scripts": {
-    "start": "node scripts/serve.cjs",
-    "dev": "node scripts/serve.cjs",
+    "start": "node scripts/serve.cjs --port 4346",
+    "dev": "node scripts/serve.cjs --port 4346",
     "build": "node scripts/build.cjs",
-    "check": "node --check motion.js && node --check reader.js && node --check app.js && node --check assets.js && node --check lettering.js && node --check book-text.js && node --check i18n.js && node --check content/translations.js && node --check scripts/serve.cjs && node --check scripts/build.cjs"
+    "check": "node --check motion.js && node --check reader.js && node --check app.js && node --check assets.js && node --check lettering.js && node --check book-text.js && node --check i18n.js && node --check content/translations.js && node --check scripts/serve.cjs && node --check scripts/build.cjs && node --check comic-sound.js && node --check cutouts.js && node --check impact.js && node --check puppet.js && node --check word-impact.js && node --check loop-ink.js && node --check panel-ink.js"
   },
   "engines": {
     "node": ">=18"
