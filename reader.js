@@ -23,7 +23,28 @@
   const count=document.querySelector('.page-count'),chapter=document.querySelector('.chapter-name');
   const prev=document.querySelector('.page-prev'),next=document.querySelector('.page-next');
   const contents=document.querySelector('#contents'),toggle=document.querySelector('.contents-toggle');
-  let book,busy=false,currentPage=0;
+  let book,busy=false,currentPage=0,impactActive=false;
+  function syncHoverCorners(){
+    if(!book)return;
+    const settings=book.getSettings();
+    settings.showPageCorners=!reducedMotion.matches&&!impactActive;
+    stage.dataset.hoverCorners=String(settings.showPageCorners);
+    // A corner preview is hover, not a deliberate page turn. Settle an
+    // existing peek before the foreground samples the original artwork.
+    // Real user folds and flips keep their input handlers and animation.
+    if(!settings.showPageCorners&&book.getState()==='fold_corner'){
+      const render=book.getRender();
+      render.finishAnimation();
+      if(book.getState()==='fold_corner'){
+        book.getFlipController().stopMove();
+        render.finishAnimation();
+      }
+    }
+  }
+  window.addEventListener('manga:impactstate',event=>{
+    impactActive=event.detail?.active===true;
+    syncHoverCorners();
+  });
   function setContents(open){contents.hidden=!open;toggle.setAttribute('aria-expanded',String(open));toggle.querySelector('span').textContent=open?'−':'＋';}
   toggle.addEventListener('click',()=>setContents(contents.hidden));
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!contents.hidden){setContents(false);toggle.focus();}});
@@ -63,7 +84,8 @@
       finally{settings.disableFlipByClick=cornerOnly;}
     }
   }
-  prev.addEventListener('click',()=>turn(-1));next.addEventListener('click',()=>turn(1));
+  function buttonTurn(direction){stage.scrollIntoView({block:'center',behavior:'instant'});turn(direction);}
+  prev.addEventListener('click',()=>buttonTurn(-1));next.addEventListener('click',()=>buttonTurn(1));
   stage.addEventListener('keydown',event=>{
     if(event.target.closest('button,a,input,select,textarea'))return;
     if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();turn(event.key==='ArrowRight'?1:-1);}
@@ -91,7 +113,7 @@
   function initBook(page=0){
     if(!window.St?.PageFlip)return;
     document.body.classList.add('book-ready');
-    book=new St.PageFlip(surface,{width:450,height:700,size:'stretch',minWidth:280,maxWidth:480,minHeight:300,maxHeight:900,usePortrait:true,autoSize:true,showCover:false,startPage:page,drawShadow:!reducedMotion.matches,maxShadowOpacity:.24,flippingTime:720,mobileScrollSupport:false,swipeDistance:45,clickEventForward:true,disableFlipByClick:true,useMouseEvents:true,showPageCorners:!reducedMotion.matches});
+    book=new St.PageFlip(surface,{width:450,height:700,size:'stretch',minWidth:280,maxWidth:480,minHeight:300,maxHeight:900,usePortrait:true,autoSize:true,showCover:false,startPage:page,drawShadow:!reducedMotion.matches,maxShadowOpacity:.24,flippingTime:720,mobileScrollSupport:false,swipeDistance:45,clickEventForward:true,disableFlipByClick:true,useMouseEvents:true,showPageCorners:!reducedMotion.matches&&!impactActive});
     book.on('flip',syncBook);book.on('changeOrientation',()=>requestAnimationFrame(syncBook));
     book.on('changeState',event=>{stage.dataset.turnState=event.data;busy=event.data==='flipping'||event.data==='user_fold';syncBook();if(!busy)requestAnimationFrame(()=>document.querySelectorAll('[data-art]').forEach(fitArt));});
     book.on('init',()=>{syncBook();goToHash(location.hash,false,false);stage.dataset.ready='true';});book.loadFromHTML(leaves);
@@ -107,7 +129,8 @@
     if(!book)return;
     book.getRender().finishAnimation();
     const settings=book.getSettings();
-    settings.drawShadow=!reducedMotion.matches;settings.showPageCorners=!reducedMotion.matches;
+    settings.drawShadow=!reducedMotion.matches;
+    syncHoverCorners();
     // The capture gate controls drag after a live preference change.
     settings.useMouseEvents=true;busy=false;syncBook();
   });

@@ -1,0 +1,110 @@
+<!doctype html>
+<!--
+  34 Split Panels
+  A Swiss poster of three flat blocks that slide apart one by one and lock back together.
+
+  40 Motion Backgrounds for AI video
+  Made in code with Claude Opus 5.5 for Scenario · scenario.com
+
+  How to use: open this file in a browser. Change the colours in P and the size in W and H.
+  It loops every 12 seconds. Space pauses. Add ?t=4.5 to the address to show one frame.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>34 Split Panels</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+</style>
+</head>
+<body>
+<canvas></canvas>
+<script>
+const W = 1920, H = 1080; // size in pixels
+
+// Colours (the accent version from the pack).
+const P = {
+  bg: '#FFB800',  // background
+  fg: '#0F0F0F',  // main colour
+  fg2: '#F2EFE9', // second colour
+};
+
+// ---------- Helpers ----------
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const mod = (x, m) => ((x % m) + m) % m;
+
+// Progress 0..1 of a window [a, b] inside a 0..1 phase.
+const win = (p, a, b) => clamp((p - a) / (b - a));
+
+const ease = {
+  inOutQuart: (k) => (k < 0.5 ? 8 * k * k * k * k : 1 - Math.pow(-2 * k + 2, 4) / 2),
+};
+
+// ---------- The tile ----------
+// One frame at time t (seconds, 0 to 12). w and h are the size, P the colours.
+
+function draw(ctx, w, h, t, P) {
+  const half = Math.floor(t / 6) % 2, tt = mod(t, 6);
+  // Closed layout (fractions of w, h): A ink tall left, B paper top, C ink bottom right.
+  const blocks = [
+    { x: 0, y: 0, w: 0.44, h: 1, c: P.fg },
+    { x: 0.44, y: 0, w: 0.3, h: 0.56, c: P.fg2 },
+    { x: 0.44, y: 0.56, w: 0.56, h: 0.44, c: P.fg },
+  ];
+  // Two different openings, alternating every 6 s: [dx, dy] per block.
+  const opens = [
+    [[-0.12, 0], [0, -0.2], [0, 0.18]],
+    [[0, 0.22], [0.14, 0], [0.1, 0]],
+  ][half];
+  const ex = 0.5; // overlap so closed seams never show the ground
+  blocks.forEach((B, i) => {
+    const o = ease.inOutQuart(win(tt, 0.1 + i * 0.6, 1.6 + i * 0.6));
+    const c = ease.inOutQuart(win(tt, 3.0 + i * 0.6, 4.5 + i * 0.6));
+    const k = o - c;
+    const x = (B.x + opens[i][0] * k) * w, y = (B.y + opens[i][1] * k) * h;
+    ctx.fillStyle = B.c;
+    ctx.fillRect(x - ex, y - ex, B.w * w + 2 * ex, B.h * h + 2 * ex);
+  });
+}
+
+// ---------- Runner ----------
+// The canvas is W x H (times the screen pixel ratio, for sharpness), scaled by CSS to fit the window.
+// window.__draw(t) renders the frame at t seconds; ?t=<seconds> in the address shows only that frame.
+const canvas = document.querySelector('canvas');
+const ratio = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = Math.round(W * ratio);
+canvas.height = Math.round(H * ratio);
+const context = canvas.getContext('2d');
+document.body.style.background = P.bg;
+
+window.__draw = (t) => {
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.fillStyle = P.bg;
+  context.fillRect(0, 0, W, H);
+  context.save();
+  context.beginPath();
+  draw(context, W, H, ((t % 12) + 12) % 12, P);
+  context.restore();
+};
+
+const still = new URLSearchParams(location.search).get('t');
+if (still !== null) {
+  window.__draw(parseFloat(still) || 0);
+} else {
+  let time = 0, last = performance.now(), paused = false;
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { paused = !paused; e.preventDefault(); }
+  });
+  requestAnimationFrame(function frame(now) {
+    if (!paused) time += (now - last) / 1000;
+    last = now;
+    window.__draw(time % 12);
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>

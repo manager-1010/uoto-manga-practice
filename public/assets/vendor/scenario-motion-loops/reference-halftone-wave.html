@@ -1,0 +1,104 @@
+<!doctype html>
+<!--
+  17 Halftone Wave
+  A 45-degree halftone screen; a travelling wave of tone swells the dots until they merge.
+
+  40 Motion Backgrounds for AI video
+  Made in code with Claude Opus 5.5 for Scenario · scenario.com
+
+  How to use: open this file in a browser. Change the colours in P and the size in W and H.
+  It loops every 12 seconds. Space pauses. Add ?t=4.5 to the address to show one frame.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>17 Halftone Wave</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+</style>
+</head>
+<body>
+<canvas></canvas>
+<script>
+const W = 1920, H = 1080; // size in pixels
+
+// Colours (the dark version from the pack).
+const P = {
+  bg: '#161616', // background
+  fg: '#FF6FA8', // main colour
+};
+
+// ---------- Helpers ----------
+
+const TAU = Math.PI * 2;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const smoothstep = (a, b, x) => { const k = clamp((x - a) / (b - a)); return k * k * (3 - 2 * k); };
+
+const dot = (path, x, y, r) => { path.moveTo(x + r, y); path.arc(x, y, r, 0, TAU); };
+
+// ---------- The tile ----------
+// One frame at time t (seconds, 0 to 12). w and h are the size, P the colours.
+
+function draw(ctx, w, h, t, P) {
+  const u = h / 100;
+  const p = 6.4 * u, rowH = p / 2, rMax = p * 0.43;
+  const T1 = (TAU * t) / 4, T2 = (TAU * t) / 6;
+  const a1 = -0.62, c1 = Math.cos(a1), s1 = Math.sin(a1), lam1 = 120;
+  const a2 = 0.9, c2 = Math.cos(a2), s2 = Math.sin(a2), lam2 = 210;
+  const path = new Path2D();
+  const rows = Math.ceil(h / rowH) + 1, cols = Math.ceil(w / p) + 1;
+  for (let j = 0; j <= rows; j++) {
+    const y = j * rowH;
+    for (let i = -1; i <= cols; i++) {
+      const x = i * p + (j % 2 ? p / 2 : 0);
+      const X = x / u, Y = y / u;
+      const v1 = Math.sin((TAU * (X * c1 + Y * s1)) / lam1 - T1);
+      const v2 = Math.sin((TAU * (X * c2 + Y * s2)) / lam2 + T2);
+      const tone = smoothstep(0.12, 0.98, 0.5 + 0.5 * (0.72 * v1 + 0.28 * v2));
+      const r = rMax * Math.pow(tone, 0.75);
+      if (r > 0.18 * u) dot(path, x, y, r);
+    }
+  }
+  ctx.fillStyle = P.fg; ctx.fill(path);
+}
+
+// ---------- Runner ----------
+// The canvas is W x H (times the screen pixel ratio, for sharpness), scaled by CSS to fit the window.
+// window.__draw(t) renders the frame at t seconds; ?t=<seconds> in the address shows only that frame.
+const canvas = document.querySelector('canvas');
+const ratio = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = Math.round(W * ratio);
+canvas.height = Math.round(H * ratio);
+const context = canvas.getContext('2d');
+document.body.style.background = P.bg;
+
+window.__draw = (t) => {
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.fillStyle = P.bg;
+  context.fillRect(0, 0, W, H);
+  context.save();
+  context.beginPath();
+  draw(context, W, H, ((t % 12) + 12) % 12, P);
+  context.restore();
+};
+
+const still = new URLSearchParams(location.search).get('t');
+if (still !== null) {
+  window.__draw(parseFloat(still) || 0);
+} else {
+  let time = 0, last = performance.now(), paused = false;
+  addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { paused = !paused; e.preventDefault(); }
+  });
+  requestAnimationFrame(function frame(now) {
+    if (!paused) time += (now - last) / 1000;
+    last = now;
+    window.__draw(time % 12);
+    requestAnimationFrame(frame);
+  });
+}
+</script>
+</body>
+</html>
