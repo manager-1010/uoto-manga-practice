@@ -1,6 +1,6 @@
 {
   "name": "uoto-manga-reader",
-  "version": "19.0.0",
+  "version": "19.0.1",
   "private": true,
   "scripts": {
     "start": "node scripts/serve.cjs --port 4346",

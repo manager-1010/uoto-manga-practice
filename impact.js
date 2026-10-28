@@ -61,6 +61,9 @@
     ja:{opening:'ドンッ',race:'ザッ',ambition:'ドクン',quotation:'ドンッ'}
   };
   let currentPage=0,spread=false,readerState='read',lastKey='',frame=0,pending=0,run=null,settling=null,sequence=0,reason='idle',suppressedUntil=0,inkState=null,loopOrigin=0;
+  const firstOpening={eligible:!location.hash||location.hash==='#opening',pending:false,consumed:false,starts:0};
+  overlay.dataset.firstEntryState=firstOpening.eligible?'idle':'not-opening';
+  overlay.dataset.firstEntryStarts='0';
   const restorers=[];
   const clamp=(n,a=0,b=1)=>Math.min(b,Math.max(a,n));
   const mix=(a,b,t)=>a+(b-a)*t;
@@ -91,6 +94,7 @@
   }
   function sourceStyle(node,values){const saved=Object.keys(values).map(key=>[key,node.style.getPropertyValue(key),node.style.getPropertyPriority(key)]);for(const [key,value]of Object.entries(values))node.style.setProperty(key,value,'important');restorers.push(()=>{for(const [key,value,priority]of saved)value?node.style.setProperty(key,value,priority):node.style.removeProperty(key);});}
   function stop(why='stopped'){
+    if(firstOpening.pending){firstOpening.pending=false;firstOpening.consumed=true;entryStatus('cancelled',why);}
     const hadSequence=!!(run||pending||settling);
     sequence++;if(frame)cancelAnimationFrame(frame);if(pending)cancelAnimationFrame(pending);frame=0;pending=0;settling=null;
     if(hadSequence&&!['complete','preparing'].includes(why))window.comicSound?.stop?.();
@@ -559,10 +563,64 @@
     if(t<1)frame=requestAnimationFrame(tick);else finish(item);
   }
   function queue(){
+    if(firstOpening.eligible&&!firstOpening.consumed&&currentPage===0){queueFirstOpening();return;}
     stop('queued');if(reduced.matches||readerState!=='read'||document.hidden)return;
     window.dispatchEvent(new CustomEvent('manga:impactstate',{detail:{active:true}}));
     const token=sequence,page=currentPage,mode=spread;
     pending=requestAnimationFrame(()=>{pending=requestAnimationFrame(()=>{pending=0;if(token===sequence&&page===currentPage&&mode===spread)start(page,mode);});});
+  }
+  function entryStatus(state,why=''){
+    overlay.dataset.firstEntryState=state;overlay.dataset.firstEntryReason=why;
+  }
+  function firstOpeningPending(){return firstOpening.pending&&settling?.kind==='first-entry';}
+  function wakeFirstOpening(){
+    if(!firstOpeningPending())return;
+    if(document.hidden){
+      if(pending)cancelAnimationFrame(pending);pending=0;
+      settling.snapshot='';settling.quietSince=performance.now();entryStatus('waiting','visibility');return;
+    }
+    if(!pending)pending=requestAnimationFrame(waitForFirstOpening);
+  }
+  function queueFirstOpening(){
+    if(firstOpeningPending()){
+      if(settling.mode!==spread){settling.mode=spread;settling.snapshot='';settling.quietSince=performance.now();}
+      wakeFirstOpening();return;
+    }
+    stop('first-entry-queued');
+    if(reduced.matches||readerState!=='read'){firstOpening.consumed=true;entryStatus('cancelled',reduced.matches?'reduced-motion':'reader-state');return;}
+    firstOpening.pending=true;
+    settling={kind:'first-entry',token:sequence,page:currentPage,mode:spread,began:performance.now(),quietSince:performance.now(),snapshot:''};
+    // Startup is passive: do not summon the overlay, disable corners or scroll
+    // the reader while fonts, images and native fragment positioning settle.
+    entryStatus('waiting','document');wakeFirstOpening();
+  }
+  function waitForFirstOpening(time){
+    pending=0;const request=settling;
+    if(!firstOpeningPending()||!request)return;
+    if(request.token!==sequence||currentPage!==0||request.page!==currentPage||request.mode!==spread||readerState!=='read'||reduced.matches){stop('first-entry-interrupted');return;}
+    if(document.hidden){wakeFirstOpening();return;}
+    const art=leaves[0]?.querySelector(shots[0].art),img=art?.querySelector('img.art-image');
+    const needs=document.readyState!=='complete'?'document':stage.dataset.ready!=='true'?'book':
+      stage.dataset.turnState&&stage.dataset.turnState!=='read'?'book-turn':
+      !img?.complete||!img.naturalWidth?'image':document.fonts&&document.fonts.status!=='loaded'?'fonts':'';
+    if(needs){request.snapshot='';request.quietSince=time;entryStatus('waiting',needs);return;}
+    const r=stage.getBoundingClientRect();
+    // Source art can already have its normal page-pan transform. It is not
+    // layout movement and must not postpone the entrance until that pan ends.
+    const snapshot=[scrollX,scrollY,innerWidth,innerHeight,r.x,r.y,r.width,r.height].map(value=>Math.round(value*10)/10).join(',');
+    if(snapshot!==request.snapshot){request.snapshot=snapshot;request.quietSince=time;}
+    entryStatus('settling','layout');
+    if(time-request.quietSince<180||time<suppressedUntil){pending=requestAnimationFrame(waitForFirstOpening);return;}
+    // Consume before starting, so the start/finish cleanup cannot queue a
+    // second entrance. A transient geometry failure may wait for a real wake.
+    firstOpening.pending=false;firstOpening.consumed=true;settling=null;entryStatus('starting');
+    const played=start(0,request.mode);
+    if(played){firstOpening.starts++;overlay.dataset.firstEntryStarts=String(firstOpening.starts);entryStatus('started');return;}
+    if(['waiting-for-image','source-not-visible','book-offscreen','start-suppressed'].includes(reason)){
+      firstOpening.pending=true;firstOpening.consumed=false;
+      settling={...request,token:sequence,quietSince:time,snapshot:''};entryStatus('waiting',reason);
+      if(reason==='start-suppressed')wakeFirstOpening();
+    }else entryStatus('cancelled',reason);
   }
   function replayAfterLayout(){
     stop('replay-settling');if(reduced.matches||readerState!=='read'||document.hidden)return;
@@ -596,6 +654,7 @@
     const key=`${page}-${asSpread?'spread':'single'}`,changed=key!==lastKey;
     if(changed&&lastKey&&nextState==='read'&&readerState==='read'&&reduced.matches)window.comicSound?.play('page');
     currentPage=page;spread=asSpread;readerState=nextState;
+    if(firstOpeningPending()&&page!==0)stop('first-entry-navigation');
     if(nextState!=='read'){stop('page-turn');if(playPage)window.comicSound?.play('page');return;}
     if(changed){lastKey=key;queue();}
   };
@@ -603,23 +662,31 @@
   document.querySelector('.motion-replay')?.addEventListener('click',replayAfterLayout);
   skip.addEventListener('click',()=>{stop('skipped');stage.focus({preventScroll:true});});
   document.addEventListener('keydown',event=>{
+    if(firstOpeningPending()&&event.isTrusted){stop('first-entry-key');return;}
     if(event.key==='Escape'&&(run||settling||pending)){stop('skipped');event.preventDefault();return;}
     if(!settling)return;
     const controls=event.target.closest('button,a,input,textarea,select');
     if(['PageUp','PageDown'].includes(event.key)||(!controls&&['ArrowUp','ArrowDown',' '].includes(event.key))||(!event.target.closest('.book-stage')&&['Home','End'].includes(event.key)))stop('user-scroll');
   });
   window.addEventListener('manga:languagechange',()=>{stop('language-change');label();});
-  window.addEventListener('resize',()=>{suppressedUntil=performance.now()+350;if(settling){settling.quietSince=performance.now();return;}stop('resize');},{passive:true});
-  window.addEventListener('scroll',()=>{if(settling){settling.quietSince=performance.now();return;}if(run||pending)stop('scroll');},{passive:true});
+  window.addEventListener('resize',()=>{suppressedUntil=performance.now()+350;if(settling){settling.quietSince=performance.now();if(firstOpeningPending())wakeFirstOpening();return;}stop('resize');},{passive:true});
+  window.addEventListener('scroll',()=>{if(settling){settling.quietSince=performance.now();if(firstOpeningPending())wakeFirstOpening();return;}if(run||pending)stop('scroll');},{passive:true});
+  const cancelFirstOpeningIntent=event=>{if(firstOpeningPending()&&event.isTrusted)stop('first-entry-intent');};
+  for(const name of ['pointerdown','touchstart'])window.addEventListener(name,cancelFirstOpeningIntent,{passive:true,capture:true});
   const cancelUserScroll=()=>{if(settling||run||pending)stop('user-scroll');};
   window.addEventListener('wheel',cancelUserScroll,{passive:true,capture:true});
   window.addEventListener('touchmove',cancelUserScroll,{passive:true,capture:true});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('hidden');});
+  document.addEventListener('visibilitychange',()=>{if(firstOpeningPending()){wakeFirstOpening();return;}if(document.hidden)stop('hidden');});
   window.addEventListener('pagehide',()=>stop('pagehide'));
   window.addEventListener('beforeprint',()=>stop('print'));
   matchMedia('print').addEventListener('change',event=>{if(event.matches)stop('print');});
   reduced.addEventListener('change',()=>stop('motion-preference'));
-  document.addEventListener('load',event=>{if(event.target.matches?.('#comic-book img.art-image')&&reason==='waiting-for-image'&&readerState==='read')queue();},true);
+  document.addEventListener('load',event=>{if(firstOpeningPending()){wakeFirstOpening();return;}if(event.target.matches?.('#comic-book img.art-image')&&reason==='waiting-for-image'&&readerState==='read')queue();},true);
+  window.addEventListener('load',wakeFirstOpening,{passive:true});
+  document.fonts?.addEventListener('loadingdone',wakeFirstOpening);
+  document.fonts?.addEventListener('loadingerror',wakeFirstOpening);
+  const entryObserver=new MutationObserver(()=>wakeFirstOpening());
+  entryObserver.observe(stage,{attributes:true,attributeFilter:['data-ready','data-turn-state','data-mode']});
   window.comicImpact=Object.freeze({stop:()=>stop('manual'),getState:()=>({active:!!run,pending:!!pending,page:currentPage,spread,phase:run?.phase||'idle',progress:run?.progress||0,kind:run?(run.cutout?'character':run.shot.type?'type':'panel'):null,reason,sourceMasks:restorers.length})});
   label();
 })();
