@@ -1,5 +1,5 @@
-/* Local reader audio: original short effects and the reader-supplied theme.
-   Nothing loads or plays until the trusted sound-toggle click. */
+/* Reader audio: try the quiet theme on entry, then retry within a trusted
+   reading gesture if the browser requires one. Off always cancels both. */
 (() => {
   'use strict';
   const host = document.querySelector('.reader-help');
@@ -28,9 +28,9 @@
   status.hidden = true;
   host.append(music,status);
   const words = {
-    'zh-Hant': {off:'開啟音效', on:'音效已開', offHint:'開啟細聲主題曲及翻頁、起跑、衝擊音效', onHint:'關閉主題曲及全部音效', unsupported:'這個瀏覽器不支援音效', blocked:'音效暫時無法開啟', loading:'正在載入主題曲…', musicBlocked:'主題曲未能開始播放；請關閉音效後再開啟。', musicError:'主題曲暫時無法播放，短音效仍可使用。'},
-    en: {off:'Enable sound', on:'Sound on', offHint:'Enable the quiet theme and page, start and impact sounds', onHint:'Mute the theme and all sound effects', unsupported:'Sound is unavailable in this browser', blocked:'Sound could not be enabled', loading:'Loading the theme…', musicBlocked:'The theme could not start. Turn sound off and on to retry.', musicError:'The theme is unavailable. Short sound effects remain enabled.'},
-    ja: {off:'音を入れる', on:'音 入', offHint:'小さな音量の主題歌とページ・スタート・衝撃の効果音を入れる', onHint:'主題歌とすべての効果音を消す', unsupported:'このブラウザーでは効果音を使えません', blocked:'音声を開始できませんでした', loading:'主題歌を読み込み中…', musicBlocked:'主題歌を再生できませんでした。音を一度切ってから、もう一度入れてください。', musicError:'主題歌を再生できません。短い効果音は引き続き使えます。'}
+    'zh-Hant': {off:'開啟音效', on:'音效已開', waiting:'音樂待播放', offHint:'開啟細聲主題曲及翻頁、起跑、衝擊音效', onHint:'關閉主題曲及全部音效', waitingHint:'點擊畫面或翻頁後播放；按此可關閉音樂及音效', unsupported:'這個瀏覽器不支援音效', blocked:'音效暫時無法開啟', loading:'正在載入主題曲…', musicBlocked:'點擊畫面或翻頁後，會開始細聲播放主題曲。', musicError:'主題曲暫時無法播放，短音效仍可使用。'},
+    en: {off:'Enable sound', on:'Sound on', waiting:'Music ready', offHint:'Enable the quiet theme and page, start and impact sounds', onHint:'Mute the theme and all sound effects', waitingHint:'Click or turn a page to start; use this button to mute all audio', unsupported:'Sound is unavailable in this browser', blocked:'Sound could not be enabled', loading:'Loading the theme…', musicBlocked:'Click or turn a page to start the quiet theme.', musicError:'The theme is unavailable. Short sound effects remain enabled.'},
+    ja: {off:'音を入れる', on:'音 入', waiting:'再生待ち', offHint:'小さな音量の主題歌とページ・スタート・衝撃の効果音を入れる', onHint:'主題歌とすべての効果音を消す', waitingHint:'画面をタップするかページをめくると再生。ここで全ての音を消せます', unsupported:'このブラウザーでは効果音を使えません', blocked:'音声を開始できませんでした', loading:'主題歌を読み込み中…', musicBlocked:'画面をタップするかページをめくると、小さな音量で主題歌を再生します。', musicError:'主題歌を再生できません。短い効果音は引き続き使えます。'}
   };
   const specifications = {
     page:{duration:.22, level:.32, cooldown:.14},
@@ -39,8 +39,9 @@
     impact:{duration:.62, level:.78, cooldown:.48}
   };
   let context = null, master = null, analyser = null, musicSource = null, musicGain = null;
-  let enabled = false, desiredEnabled = false, blocked = false, generation = 0, peak = 0;
-  let musicState = 'off';
+  let enabled = false, desiredEnabled = !!AudioContextClass, blocked = false, generation = 0, peak = 0;
+  let awaitingActivation = desiredEnabled;
+  let musicState = desiredEnabled ? 'waiting' : 'off';
   const active = new Set();
   const buffers = {};
   const playCounts = {page:0, start:0, impact:0, prepare:0};
@@ -49,20 +50,21 @@
   function wording() { return words[document.documentElement.lang] || words['zh-Hant']; }
   function render() {
     const copy = wording();
-    button.textContent = desiredEnabled ? copy.on : copy.off;
+    button.textContent = desiredEnabled ? awaitingActivation ? copy.waiting : copy.on : copy.off;
     button.setAttribute('aria-pressed', String(desiredEnabled));
     button.dataset.soundEnabled = String(enabled);
     button.dataset.soundRequested = String(desiredEnabled);
     button.dataset.bgState = musicState;
+    button.dataset.awaitingActivation = String(awaitingActivation);
     music.dataset.bgState = musicState;
     music.dataset.bgRequested = String(desiredEnabled);
     music.dataset.bgLoop = String(music.loop);
     music.dataset.bgVolume = String(music.volume);
     music.dataset.bgGain = String(musicGain?.gain.value||0);
     button.disabled = !AudioContextClass;
-    button.title = !AudioContextClass ? copy.unsupported : blocked ? copy.blocked : desiredEnabled ? copy.onHint : copy.offHint;
+    button.title = !AudioContextClass ? copy.unsupported : desiredEnabled && awaitingActivation ? copy.waitingHint : blocked ? copy.blocked : desiredEnabled ? copy.onHint : copy.offHint;
     button.setAttribute('aria-label', button.title);
-    status.textContent = musicState==='loading'?copy.loading:musicState==='blocked'?copy.musicBlocked:musicState==='error'?copy.musicError:'';
+    status.textContent = musicState==='waiting'||musicState==='blocked'?copy.musicBlocked:musicState==='loading'?copy.loading:musicState==='error'?copy.musicError:'';
     status.hidden = !status.textContent || !desiredEnabled;
   }
   function stopMusic() {
@@ -89,26 +91,39 @@
           if(requestedMusic!==music||!desiredEnabled||document.hidden)requestedMusic.pause();
           return;
         }
-        musicState=requestedMusic.paused?'blocked':'playing';render();
+        if(context?.state!=='running') {
+          requestedMusic.pause();musicState='waiting';awaitingActivation=true;
+        } else {
+          musicState=requestedMusic.paused?'waiting':'playing';
+          awaitingActivation=requestedMusic.paused;
+        }
+        render();
       }).catch(error=>{
         if(!current())return;
-        musicState=error?.name==='NotAllowedError'?'blocked':'error';
+        musicState=error?.name==='NotAllowedError'?'waiting':'error';
+        awaitingActivation=musicState==='waiting'||!enabled;
         requestedMusic.dataset.bgError=error?.name||'PlaybackError';render();
       });
     } catch(error) {
       if(!current())return;
-      musicState=error?.name==='NotAllowedError'?'blocked':'error';
+      musicState=error?.name==='NotAllowedError'?'waiting':'error';
+      awaitingActivation=musicState==='waiting'||!enabled;
       requestedMusic.dataset.bgError=error?.name||'PlaybackError';
     }
   }
   function bindMusicEvents(audio) {
     audio.addEventListener('playing',()=>{
       if(audio!==music||!desiredEnabled||document.hidden){audio.pause();return;}
-      musicState='playing';render();
+      if(context?.state!=='running') {
+        audio.pause();musicState='waiting';awaitingActivation=true;
+      } else {
+        musicState='playing';awaitingActivation=false;
+      }
+      render();
     });
     audio.addEventListener('error',()=>{
       if(audio!==music||!desiredEnabled)return;
-      musicState='error';audio.dataset.bgError=String(audio.error?.code||'MediaError');render();
+      musicState='error';awaitingActivation=!enabled;audio.dataset.bgError=String(audio.error?.code||'MediaError');render();
     });
     audio.addEventListener('waiting',()=>{
       if(audio!==music||!desiredEnabled)return;
@@ -220,7 +235,7 @@
     }
   }
   function mute(immediate=false) {
-    generation++; desiredEnabled=false; enabled=false; stopMusic();stop(immediate);
+    generation++; desiredEnabled=false; enabled=false; awaitingActivation=false; stopMusic();stop(immediate);
     if(master&&context) {
       master.gain.cancelScheduledValues(context.currentTime);
       master.gain.setValueAtTime(master.gain.value,context.currentTime);
@@ -249,14 +264,13 @@
     lastPlayed[kind]=now; playCounts[kind]++;
     return true;
   }
-  button.addEventListener('click', async event => {
-    if (!event.isTrusted || !AudioContextClass) return;
-    if (desiredEnabled) { mute(); return; }
-    const request=++generation; desiredEnabled=true;blocked=false;
+  async function enableAudio() {
+    if(!AudioContextClass||document.hidden)return;
+    const request=++generation; desiredEnabled=true;blocked=false;awaitingActivation=true;
     try {
       if (!context || context.state==='closed') createGraph();
-      // Both requests originate in this same trusted click. Waiting for a slow
-      // AudioContext resume first can otherwise lose media user activation.
+      // Never await resume before play: a blocked resume may remain pending.
+      // A later reading gesture can make a new attempt in its own call stack.
       const resume=context.state!=='running'?context.resume():Promise.resolve();
       startMusic(request);render();
       await resume;
@@ -270,14 +284,31 @@
         musicGain.gain.setValueAtTime(musicGain.gain.value,context.currentTime);
         musicGain.gain.linearRampToValueAtTime(musicVolume,context.currentTime+.12);
         music.dataset.bgTargetGain=String(musicVolume);
+        awaitingActivation=musicState==='waiting';
+        // Media may have started before its context was ready and been paused
+        // above. Resume it now, unless the media itself requires a gesture.
+        if(music.paused&&musicState==='waiting'&&!music.dataset.bgError)startMusic(request);
       }
-      if(!enabled){desiredEnabled=false;stopMusic();}
+      if(!enabled){awaitingActivation=true;musicState='waiting';}
     } catch {
       if(request!==generation)return;
-      enabled=false;desiredEnabled=false;blocked=true;stopMusic();
+      enabled=false;blocked=true;awaitingActivation=true;
+      music.pause();musicState='waiting';
     }
     render();
+  }
+  button.addEventListener('click', event => {
+    if (!event.isTrusted || !AudioContextClass) return;
+    if (desiredEnabled) { mute(); return; }
+    void enableAudio();
   });
+  function unlockFromReading(event) {
+    if(!event.isTrusted||!desiredEnabled||!awaitingActivation||document.hidden)return;
+    if(event.target?.closest?.('.comic-sound-toggle'))return;
+    if(event.type==='keydown'&&(event.altKey||event.ctrlKey||event.metaKey||!['ArrowLeft','ArrowRight','Home','End','PageUp','PageDown','Enter',' '].includes(event.key)))return;
+    void enableAudio();
+  }
+  for(const type of ['click','touchend','keydown'])window.addEventListener(type,unlockFromReading,{capture:true,passive:true});
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) return;
     mute(true);
@@ -298,4 +329,5 @@
     }
   });
   render();
+  if(desiredEnabled)void enableAudio();
 })();
