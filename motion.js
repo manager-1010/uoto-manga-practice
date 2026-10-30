@@ -4,7 +4,7 @@
   const stage=document.querySelector('.book-stage');
   const replay=document.querySelector('.motion-replay');
   const preference=window.mangaDrawing.reducedMotion;
-  const scenes=[{name:'opening',duration:2000},{name:'race',duration:825},{name:'belief',duration:1800},{name:'resolve',duration:1650},{name:'ambition',duration:1600},{name:'reflection',duration:1150},{name:'quotation',duration:1600},{name:'ending',duration:2000}];
+  const scenes=[{name:'opening',duration:2000},{name:'race',duration:0},{name:'belief',duration:1800},{name:'resolve',duration:1650},{name:'ambition',duration:1600},{name:'reflection',duration:1150},{name:'quotation',duration:1600},{name:'ending',duration:2000}];
   const leaves=[...surface.querySelectorAll(':scope > .leaf')];
   let scene=null,pageKey='',state='read',elapsed=0,previousTime=0,frame=0;
   function paint(progress=1){
@@ -26,7 +26,7 @@
     if(progress<1)frame=requestAnimationFrame(tick);else previousTime=0;
   }
   function resume(){if(canPlay()&&elapsed<scene.duration&&!frame)frame=requestAnimationFrame(tick);}
-  function restart(){stop();elapsed=0;if(preference.matches){paint();return;}paint(0);resume();}
+  function restart(){stop();elapsed=0;if(preference.matches||!scene?.duration){paint();return;}paint(0);resume();}
   window.comicMotion={
     sync(page,spread,nextState){
       const sceneName=leaves[page]?.dataset.scene;
@@ -34,7 +34,7 @@
       const nextKey=nextScene?`${nextScene.name}-${spread?'spread':page}`:'';
       const changed=nextKey!==pageKey;
       state=nextState;
-      if(changed){stop();scene=nextScene;pageKey=nextKey;elapsed=0;if(scene)preference.matches?paint():paint(0);}
+      if(changed){stop();scene=nextScene;pageKey=nextKey;elapsed=0;if(scene)preference.matches||!scene.duration?paint():paint(0);}
       replay.hidden=!scene||preference.matches;replay.disabled=state!=='read';
       if(preference.matches){paint();stop();}else if(!canPlay())stop();else resume();
     },
