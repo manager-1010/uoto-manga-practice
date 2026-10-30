@@ -9,7 +9,7 @@ const archive=path.join(root,'.build-history',stamp);
 for(const target of [dist,staging,archive])if(!path.resolve(target).startsWith(root+path.sep))throw new Error('Build path must stay inside project.');
 fs.writeFileSync(path.join(root,'content/translations.js'),renderTranslations(root));
 fs.mkdirSync(staging, { recursive: true });
-for (const file of ['index.html','style.css','app.js','assets.js','reader.js','motion.js','spread.css','pages.css','book-text.js','lettering.js','i18n.js','i18n.css','type-fonts.css','typography.css','refinement.css','comic-sound.js','comic-sound.css','cutouts.js','impact.js','impact.css','puppet.js','word-impact.js','word-impact.css','loop-ink.js','panel-ink.js']) fs.copyFileSync(path.join(root,file),path.join(staging,file));
+for (const file of ['index.html','style.css','app.js','assets.js','reader.js','motion.js','spread.css','pages.css','book-text.js','lettering.js','i18n.js','i18n.css','type-fonts.css','typography.css','refinement.css','comic-sound.js','comic-sound.css','cutouts.js','impact.js','impact.css','puppet.js','word-impact.js','word-impact.css','word-entry.js','word-entry.css','loop-ink.js','panel-ink.js']) fs.copyFileSync(path.join(root,file),path.join(staging,file));
 fs.cpSync(path.join(root,'public'),path.join(staging,'public'),{recursive:true});
 fs.mkdirSync(path.join(staging,'content'),{recursive:true});
 fs.copyFileSync(path.join(root,'content/translations.js'),path.join(staging,'content/translations.js'));

@@ -60,7 +60,21 @@
     const lower=mark([[[x+r.width*.57,bottom+gap],[x+r.width*.57+length,bottom+gap]],[[x+r.width*.57,bottom+gap+5],[x+r.width*.57+length-7,bottom+gap+5]]],-2,0,1.6);
     const left=mark([[[x-gap,y+r.height*.35],[x-gap,y+r.height*.35+length]]],-2,0);
     const rightMark=mark([[[right+gap,y+r.height*.54],[right+gap,y+r.height*.54+length]]],2,0);
+    // The runner stays still. Short complete parallel strokes flash beside the
+    // frame; each swept stroke must clear the art, lettering and controls.
+    const dash=compact?28:52;
+    const raceLeft=ratio=>mark([
+      [[x-gap-dash,y+r.height*ratio-6],[x-gap,y+r.height*ratio-8]],
+      [[x-gap-dash*.7,y+r.height*ratio],[x-gap-3,y+r.height*ratio-1]],
+      [[x-gap-dash*.9,y+r.height*ratio+6],[x-gap-8,y+r.height*ratio+4]]
+    ],-7,0,1.8);
+    const raceRight=ratio=>mark([
+      [[right+gap,y+r.height*ratio-6],[right+gap+dash,y+r.height*ratio-8]],
+      [[right+gap+3,y+r.height*ratio],[right+gap+dash*.7,y+r.height*ratio-1]],
+      [[right+gap+8,y+r.height*ratio+6],[right+gap+dash*.9,y+r.height*ratio+4]]
+    ],-7,0,1.8);
     const ordered={
+      'race-flash':[raceLeft(.3),raceLeft(.7),raceRight(.3),raceRight(.7),upper,lower],
       breath:[corners[0],corners[2],lower,left,rightMark,upper,...corners],
       'eye-shutter':[upper,lower,rightMark,left,...corners],
       resolve:[corners[1],corners[3],rightMark,upper,lower,left,...corners],
@@ -91,7 +105,7 @@
     for(const mark of candidates(outer,variant)){
       if(!safe(mark,[...protectedRects,...used],viewport))continue;
       accepted.push(mark);used.push(...segmentSweeps(mark));
-      if(accepted.length>=3)break;
+      if(accepted.length>=(variant==='race-flash'?2:3))break;
     }
     if(!accepted.length)return null;
     const groups=[],steps=[];

@@ -23,8 +23,8 @@
   const shots=[
     {art:'.opening-visual',cutout:'runners',rig:'runners',text:'.opening-hook h1',cross:true,balloon:true,opening:true,tone:'track',move:'sprint-left',side:-1,hero:true},
     {inplace:true,art:'.opening-mobile-beat .art',sourceOnly:true,text:'.opening-finish-voice',variant:'footfall',tone:'feet',side:1,duration:1800},
-    {inplace:true,art:'.race-visual',cutout:'sprinter',rig:'sprinter',variant:'acceleration',tone:'track',side:1,duration:1450,awaitNext:'.comparison-question p'},
-    {inplace:true,text:'.comparison-question p',variant:'question-letters',tone:'question',duration:1500,lettering:{delayMs:120,revealMs:900,pop:.20,lift:4}},
+    {inplace:true,art:'.race-visual',sourceOnly:true,variant:'race-flash',tone:'track',side:1,duration:2000,artDurationMs:2000,edgeInk:true},
+    {inplace:true,text:'.comparison-question p',variant:'question-letters',tone:'question',duration:2000,lettering:{delayMs:40,revealMs:1800,pop:.20,lift:4}},
     {art:'.belief-cover .art',text:'.unframed-question',tone:'orbit',move:'orbit',side:-1},
     {inplace:true,text:'.character-question',variant:'portrait-ink',tone:'portrait',duration:2000},
     {inplace:true,art:'.komiya-conversation .art',sourceOnly:true,variant:'breath',tone:'conversation',duration:1250,artDurationMs:900,edgeInk:true},
@@ -43,7 +43,7 @@
   const inkBeats=[
     {kind:'halftone',density:.62,span:4},
     null, // 2: the finish-line lettering already carries the beat.
-    null, // 3: one short runner action, without dots or added wind.
+    null, // 3: a brief safe ink flash; the original runner stays still.
     null, // 4: quiet reading space beside the runner.
     {kind:'orbit',density:.68,span:5},
     {kind:'circle',density:.48,span:4},
@@ -100,6 +100,7 @@
     if(hadSequence&&!['complete','preparing'].includes(why))window.comicSound?.stop?.();
     window.mangaPanelInk?.clear(run?.panelInk);drawing.dataset.panelInkCount='0';
     restoreSources();document.body.removeAttribute('data-impact-playing');overlay.hidden=true;skip.hidden=true;drawing.replaceChildren();overlay.querySelectorAll('.manga-impact-local').forEach(node=>node.remove());drawing.style.transform='none';backdrop.style.opacity='0';caption.textContent='';caption.style.opacity='0';typography.textContent='';typography.hidden=true;typography.style.opacity='0';sfx.textContent='';sfx.hidden=true;sfx.style.opacity='0';balloon.hidden=true;balloonText.textContent='';intro.hidden=true;intro.textContent='';
+    overlay.dataset.raceFlashState='idle';overlay.dataset.raceQuestionState='idle';overlay.dataset.parallelQuestion='false';
     clearLoopCanvas();inkState=null;loopCanvas.dataset.loopActive='false';loopCanvas.dataset.loopMarks='0';
     if(!['complete','preparing'].includes(why))loopOrigin=0;
     overlay.dataset.impactPhase='idle';overlay.dataset.impactActive='false';overlay.dataset.characterVisible='false';overlay.dataset.stopReason=why;run=null;reason=why;
@@ -180,7 +181,10 @@
     loopContext.setTransform(ratio,0,0,ratio,0,0);
     const add=(bounds,pad=9)=>{if(bounds.width>1&&bounds.height>1)safeRects.push({x:bounds.x-pad,y:bounds.y-pad,width:bounds.width+pad*2,height:bounds.height+pad*2});};
     const viewport={x:0,y:0,width,height};
-    for(const leaf of leaves.slice(currentPage,currentPage+(spread?2:1))){
+    // The full-screen paper/ink backdrop already hides the original page.
+    // Protecting those old rectangular text/art boxes would remove unrelated
+    // portions of the foreground speed lines. Local scenes retain page safety.
+    for(const leaf of item.local?leaves.slice(currentPage,currentPage+(spread?2:1)):[]){
       const leafBounds=rect(leaf.getBoundingClientRect());
       for(const node of leaf.querySelectorAll('h1,h2,h3,p,.balloon,.word-choice,.art')){
         if(node.closest('.art')&&!node.classList.contains('art'))continue;
@@ -188,18 +192,27 @@
         add(intersect(intersect(rect(node.getBoundingClientRect()),leafBounds),viewport));
       }
     }
-    for(const node of [document.querySelector('header'),document.querySelector('.book-controls'),document.querySelector('.reader-help')])if(visible(node))add(intersect(rect(node.getBoundingClientRect()),viewport),6);
+    const controls=item.local?[document.querySelector('header'),document.querySelector('.book-controls'),document.querySelector('.reader-help')]:[skip];
+    for(const node of controls)if(visible(node))add(intersect(rect(node.getBoundingClientRect()),viewport),6);
     for(const node of [caption,typography,sfx,balloon,intro])if(!node.hidden){
       const r=rect(node.getBoundingClientRect());
+      if(node===caption&&caption.textContent.trim()){
+        // The paragraph spans 91vw, but its actual ink is centred in that box.
+        // Reserve the text and its pop, leaving genuinely empty corner lanes.
+        const range=document.createRange();range.selectNodeContents(caption);
+        const ink=rect(range.getBoundingClientRect());
+        if(ink.width>1&&ink.height>1){add(ink,Math.max(24,ink.width*.07));add({x:r.x+r.width/2-28,y:r.y,width:56,height:8},10);continue;}
+      }
       // Reserve the largest lettering pop rather than measuring it every frame.
       const margin=node===intro||node===balloon?Math.max(24,r.width*.12):24;
       add(r,margin);
     }
-    // Reserve both settled poses, including transparent gaps. The moving
-    // drawing's current rotated bounds are added without DOM reads in tick().
+    // Local scenes reserve both poses. In full-screen scenes the hidden book
+    // position must not wipe out a corner; current rotated actor bounds are
+    // already added per frame, together with the settled foreground pose.
     if(item.bodyBox&&item.baseline&&item.target){
       const [x,y,w,h]=item.bodyBox;
-      for(const p of [item.baseline,item.target])add({x:p.x+x*p.scale,y:p.y+y*p.scale,width:w*p.scale,height:h*p.scale},32);
+      for(const p of item.local?[item.baseline,item.target]:[item.target])add({x:p.x+x*p.scale,y:p.y+y*p.scale,width:w*p.scale,height:h*p.scale},32);
     }
     inkState={width,height,ratio,safeRects,beat:inkBeats[item.page],frame:0};
     loopCanvas.dataset.loopPage=String(item.page+1);loopCanvas.dataset.loopSafeCount=String(safeRects.length);
@@ -284,6 +297,10 @@
       if(secondary){const layer=localLettering(secondary,.44);if(layer)texts.push(layer);}
     }
     if(spread&&shot.paired){const companion=find(leaves[page+1],shot.paired);if(companion&&!companion.classList.contains('art')){const layer=localLettering(companion,.35);if(layer)texts.push(layer);}}
+    // This spread is one simultaneous beat: keep the original runner still,
+    // flash ink for 2000ms, and reveal the right-page question on the same clock.
+    const raceQuestion=shot.variant==='race-flash'&&spread&&page===currentPage?find(leaves[page+1],shots[3].text):null;
+    if(raceQuestion){const layer=localLettering(raceQuestion,0,shots[3].lettering);if(layer)texts.push(layer);}
     // A spread reads as one sequence: keep the question for the second beat.
     // Skip, navigation and reduced motion restore it through the same stack.
     if(spread&&shot.awaitNext&&page===currentPage){const waiting=find(leaves[page+1],shot.awaitNext);if(waiting)sourceStyle(waiting,{opacity:'0'});}
@@ -314,7 +331,8 @@
       }
       safe.append(lines);
     }
-    run={page,shot,local:true,start:0,duration:shot.duration||2400,texts,inlineTexts,sourceArt,actor,mesh,baseline,focus,lines,sounded:false};
+    run={page,shot,local:true,start:0,duration:raceQuestion?shots[3].duration:shot.duration||2400,texts,inlineTexts,sourceArt,actor,mesh,baseline,focus,lines,sounded:false,skipCompanion:shot.variant==='race-flash',raceQuestion:!!raceQuestion};
+    if(shot.variant==='race-flash'){overlay.dataset.raceFlashState='active';overlay.dataset.parallelQuestion=String(!!raceQuestion);overlay.dataset.raceQuestionState=raceQuestion?'scheduled':'absent';}
     if(shot.edgeInk&&sourceArt)run.panelInk=window.mangaPanelInk?.prepare({drawing,art:sourceArt,leaves:leaves.slice(currentPage,currentPage+(spread?2:1)),variant:shot.variant});
     beginInk(run);
     reason='playing';overlay.dataset.stopReason='';frame=requestAnimationFrame(tick);return true;
@@ -338,7 +356,12 @@
       piece.node.style.setProperty('background-color',on?'#111':piece.background,'important');
       piece.node.style.setProperty('color',on?'#fff':piece.color,'important');
     }
-    if(item.sourceArt){
+    if(item.sourceArt&&item.shot.variant==='race-flash'){
+      const flash=clamp(elapsed/item.shot.artDurationMs);
+      window.mangaPanelInk?.paint(item.panelInk,flash);
+      overlay.dataset.raceFlashState=flash<1?'active':'complete';
+      if(item.raceQuestion)overlay.dataset.raceQuestionState=elapsed<shots[3].lettering.delayMs?'scheduled':elapsed<shots[3].lettering.delayMs+shots[3].lettering.revealMs?'revealing':'complete';
+    }else if(item.sourceArt){
       const motionProgress=clamp((elapsed-(item.shot.artDelayMs||0))/(item.shot.artDurationMs||item.duration));
       const motionEnvelope=smooth(motionProgress/.18)*(1-smooth((motionProgress-.60)/.40));
       const variant=item.shot.variant;
@@ -359,12 +382,12 @@
       item.mesh?.update(elapsed/1000,envelope);overlay.dataset.characterVisible='true';
       if(item.lines){item.lines.style.opacity=String(envelope*.62);item.lines.style.transform=shot.variant==='acceleration'?`translateX(${(t*r.width*.62).toFixed(2)}px)`:'none';}
     }
-    if(!item.sounded&&t>.16){item.sounded=true;if(['acceleration','footfall'].includes(item.shot.variant))window.comicSound?.play('start');else if(item.shot.variant==='choice')window.comicSound?.play('impact');}
+    if(!item.sounded&&t>.16){item.sounded=true;if(['acceleration','footfall','race-flash'].includes(item.shot.variant))window.comicSound?.play('start');else if(item.shot.variant==='choice')window.comicSound?.play('impact');}
     paintInk(item,time,t,envelope);
     if(t<1)frame=requestAnimationFrame(tick);else finish(item);
   }
   function finish(item){
-    const companion=spread&&item.page===currentPage&&currentPage%2===0&&leaves[currentPage+1];
+    const companion=!item.skipCompanion&&spread&&item.page===currentPage&&currentPage%2===0&&leaves[currentPage+1];
     stop('complete');
     // A desktop spread contains two authored beats; portrait mode plays each
     // leaf separately. Only completion continues, never Skip or interruption.
@@ -400,7 +423,9 @@
       balloon.style.opacity='0';balloon.style.transform='translate(-50%,-50%) scale(.88)';
     }
     const explanation=shot.explain?textOf(leaves[page+1]?.querySelector(shot.explain)||leaf.querySelector(shot.explain)):'';
-    caption.textContent=explanation||copy.text;caption.hidden=hasBalloon||shot.type||!copy.text;caption.style.fontSize=shot.glyph?'clamp(19px,3vw,32px)':'';caption.style.transform='';
+    // Measure the caption in its centred reading position before reserving ink
+    // space. A blank transform would measure its left edge at 50vw instead.
+    caption.textContent=explanation||copy.text;caption.hidden=hasBalloon||shot.type||!copy.text;caption.style.fontSize=shot.glyph?'clamp(19px,3vw,32px)':'';caption.style.transform='translateX(-50%)';
     typography.hidden=!(shot.type||shot.glyph);typography.textContent=shot.type?copy.text:'';
     let glyphUnits=null;
     if(shot.glyph){glyphUnits=glyphs(typography,copy.text);typography.style.fontFamily='';typography.style.fontSize='';typography.style.width='';typography.style.left='50%';typography.style.top='42%';typography.style.transform='translate(-50%,-50%)';}

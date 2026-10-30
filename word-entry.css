@@ -1,0 +1,19 @@
+/* Question first, then five words land inside their live manga cells. */
+.word-entry-layer { position:fixed;inset:0;z-index:92;pointer-events:none;overflow:hidden;contain:layout paint style; }
+.word-entry-backdrop { position:fixed;inset:0;z-index:92;background:#101010;pointer-events:auto;overflow:hidden;contain:layout paint style; }
+.word-entry-ink { position:absolute;inset:0;width:100%;height:100%;pointer-events:none; }
+.word-entry-layer[hidden],.word-entry-backdrop[hidden],.word-entry-word[hidden],.word-entry-prompt[hidden],.word-entry-skip[hidden] { display:none; }
+.word-entry-prompt,.word-entry-word { position:absolute;margin:0;padding:0;border:0;background:none;transform-origin:50% 50%;pointer-events:none; }
+.word-entry-prompt { box-sizing:border-box;white-space:normal;background:#fff;border:3px solid #111;border-radius:48% 46% 47% 44% / 45% 49% 43% 48%;box-shadow:5px 5px 0 #111;color:#111!important;will-change:transform,opacity; }
+.word-entry-prompt::after { content:'';position:absolute;left:63%;bottom:-13px;width:24px;height:24px;background:#fff;border-left:3px solid #111;border-bottom:3px solid #111;transform:skew(-18deg) rotate(-34deg); }
+.word-entry-char { display:inline-block;white-space:pre;transform-origin:50% 75%; }
+.word-entry-word { text-align:center;line-height:inherit;--word-fill:#fff;--word-outline:1.5px;--word-shadow:2px;color:var(--word-fill)!important;-webkit-text-fill-color:var(--word-fill);-webkit-text-stroke:var(--word-outline) #111;paint-order:stroke fill;filter:drop-shadow(var(--word-shadow) var(--word-shadow) 0 #111);will-change:transform,opacity; }
+.word-entry-burst { position:absolute;pointer-events:none;overflow:visible; }
+.word-entry-skip { align-self:baseline;margin:0 0 18px;padding:4px 8px;background:#fff;border:1px solid #444;color:#181818;font:12px/1.3 var(--lettering);cursor:pointer; }
+.word-entry-skip[data-fullscreen=true] { position:fixed;top:max(14px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));z-index:94;margin:0;padding:10px 14px;border:1px solid #111;box-shadow:3px 3px 0 #111;font-size:15px; }
+#words .interaction-hint { font-size:16px;line-height:1.45; }
+#words .word-panels { top:199px; }
+.book-stage[data-mode=single] #words .interaction-hint { top:130px;font-size:15.5px;line-height:1.45; }
+.book-stage[data-mode=single] #words .word-panels { top:182px; }
+@media(prefers-reduced-motion:reduce) { .word-entry-layer,.word-entry-backdrop,.word-entry-skip { display:none!important; } }
+@media print { .word-entry-layer,.word-entry-backdrop,.word-entry-skip { display:none!important; } }

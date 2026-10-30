@@ -29,6 +29,36 @@
   function inRim(x, y, radius, width, height, rim) {
     return x - radius < rim || x + radius > width - rim || y - radius < rim || y + radius > height - rim;
   }
+  function segmentHitsRect(a,b,r,pad=0) {
+    const left=r.x-pad,right=r.x+r.width+pad,top=r.y-pad,bottom=r.y+r.height+pad;
+    let lo=0,hi=1;
+    for(const [origin,delta,min,max] of [[a[0],b[0]-a[0],left,right],[a[1],b[1]-a[1],top,bottom]]) {
+      if(Math.abs(delta)<1e-8){if(origin<min||origin>max)return false;continue;}
+      let near=(min-origin)/delta,far=(max-origin)/delta;
+      if(near>far)[near,far]=[far,near];lo=Math.max(lo,near);hi=Math.min(hi,far);
+      if(lo>hi)return false;
+    }
+    return true;
+  }
+  // Decide whether a complete mark belongs in the composition before drawing
+  // it. Subtracting rectangular holes from finished ink makes black/white
+  // blocks appear through a long speed line, even though no block was painted.
+  function safePath(points,options,pad=1) {
+    for(const zone of options.safeRects)for(let i=1;i<points.length;i++)
+      if(segmentHitsRect(points[i-1],points[i],zone,pad))return false;
+    return true;
+  }
+  function safeDot(x,y,radius,options) {
+    return !options.safeRects.some(r=>x+radius>=r.x&&x-radius<=r.x+r.width&&y+radius>=r.y&&y-radius<=r.y+r.height);
+  }
+  function curvePoints(a,b,c,d) {
+    const points=[];
+    for(let i=0;i<=32;i++){
+      const t=i/32,u=1-t;
+      points.push([u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]]);
+    }
+    return points;
+  }
 
   // Source: reference-halftone-wave.html. Keep the staggered 45-degree screen
   // and its two travelling sine tones. The merged solid field becomes a sparse
@@ -51,7 +81,7 @@
         const v2 = Math.sin(TAU * (xx * c2 + yy * s2) / 210 + t2);
         const tone = smooth(windowProgress(.5 + .5 * (.72 * v1 + .28 * v2), .12, .98));
         const radius = radiusMax * Math.pow(tone, .75);
-        if (radius > .18 * unit) { dot(context, x, y, radius); marks++; }
+        if (radius > .18 * unit && safeDot(x,y,radius,options)) { dot(context, x, y, radius); marks++; }
       }
     }
     context.fillStyle = palette.ink;
@@ -90,8 +120,10 @@
       }
       for (const [start, end] of segments) {
         if (end - start < .3 * unit) continue;
-        context.moveTo(cx + ca * start, cy + sa * start);
-        context.lineTo(cx + ca * end, cy + sa * end);
+        const a=[cx+ca*start,cy+sa*start],b=[cx+ca*end,cy+sa*end];
+        if(!safePath([a,b],options,Math.max(1,unit*.38)/2+1))continue;
+        context.moveTo(...a);
+        context.lineTo(...b);
         marks++;
       }
     }
@@ -123,7 +155,9 @@
         const x = cx + r * Math.cos(angle), y = cy + r * .68 * Math.sin(angle);
         if (x < -2 * unit || x > width + 2 * unit || y < -2 * unit || y > height + 2 * unit) continue;
         if (!inRim(x, y, radius * 1.45, width, height, options.rim)) continue;
-        dot(context, x, y, radius * (j % (n / sections) === 0 ? 1.35 : 1));
+        const dotRadius=radius*(j%(n/sections)===0?1.35:1);
+        if(!safeDot(x,y,dotRadius,options))continue;
+        dot(context, x, y, dotRadius);
         marks++;
       }
       context.fillStyle = ring % 4 === 0 ? palette.accent : palette.ink;
@@ -147,6 +181,7 @@
       [[0, .22], [.14, 0], [.1, 0]]
     ][half];
     const unit = Math.max(1, Math.min(width, height) / 240);
+    let marks=0;
     for (let index = 0; index < blocks.length; index++) {
       const block = blocks[index];
       const opening = quartEase(windowProgress(localTime, .1 + index * .6, 1.6 + index * .6));
@@ -156,11 +191,15 @@
       const y = (block.y + openings[index][1] * amount) * height;
       context.strokeStyle = palette.ink;
       context.lineWidth = unit * (index === 0 ? 2.3 : 1.4);
+      const left=x+unit,top=y+unit,right=x+block.w*width-unit,bottom=y+block.h*height-unit;
+      if(!safePath([[left,top],[right,top],[right,bottom],[left,bottom],[left,top]],options,context.lineWidth/2+1))continue;
       context.strokeRect(x + unit, y + unit, block.w * width - 2 * unit, block.h * height - 2 * unit);
+      marks++;
     }
     context.fillStyle = palette.accent;
-    context.fillRect(width * .06, height * .035, Math.min(width * .1, 64), Math.max(2, unit));
-    return 4;
+    const x=width*.06,y=height*.035,w=Math.min(width*.1,64),h=Math.max(2,unit);
+    if(!options.safeRects.some(r=>x<r.x+r.width&&x+w>r.x&&y<r.y+r.height&&y+h>r.y)){context.fillRect(x,y,w,h);marks++;}
+    return marks;
   }
 
   // Source: reference-arc-rotation.html. Preserve the alternating whole-turn
@@ -176,44 +215,53 @@
     const p = cycle(time, 6);
     context.lineCap = 'butt';
     context.lineWidth = Math.max(1.2, base * .0035);
+    let marks=0;
     for (const [index, ring] of rings.entries()) {
       const k = cubicEase(windowProgress(p, .02 + index * .03, .82 + index * .03));
       const angle = ring.turns * TAU * k;
       const gap = (1 - ring.span) * TAU;
+      const start=angle+gap/2,end=angle+TAU-gap/2,radius=ring.radius*base;
+      const points=[],steps=Math.max(8,Math.ceil((end-start)*radius/12));
+      for(let i=0;i<=steps;i++){const a=start+(end-start)*i/steps;points.push([cx+radius*Math.cos(a),cy+radius*Math.sin(a)]);}
+      if(!safePath(points,options,context.lineWidth/2+1))continue;
       context.strokeStyle = ring.accent ? palette.accent : palette.ink;
       context.beginPath();
-      context.arc(cx, cy, ring.radius * base, angle + gap / 2, angle + TAU - gap / 2);
+      context.arc(cx, cy, radius, start, end);
       context.stroke();
+      marks++;
     }
-    return rings.length;
+    return marks;
   }
 
-  // A restrained curved-ink connector. The shared time controls a continuous
-  // travelling bend; it is never applied to an image or a character mesh.
+  // Complete corner ribbons, rather than full-width curves with holes cut out
+  // for the cover and caption. Their deliberate ends frame the central drawing.
+  // The shared time bends the ink only, never an image or character mesh.
   function flow(context, width, height, time, palette, options) {
-    const count = Math.round(4 + options.density * 5), edge = options.rim;
+    const count = Math.round(4 + options.density * 4), edge = options.rim;
     const unit = Math.max(1, Math.min(width, height) / 260);
     context.lineCap = 'butt';
+    let marks=0;
     for (let i = 0; i < count; i++) {
-      const inset = (i + 1) / (count + 1) * edge;
-      const bend = Math.sin(time * TAU / 6 + i * .36) * edge * .22;
+      const progress=(i+1)/(count+1),inset=10+progress*edge*.76;
+      const bend = Math.sin(time * TAU / 6 + i * .36) * edge * .045;
       context.strokeStyle = i === count - 1 ? palette.accent : palette.ink;
       context.lineWidth = i % 3 === 0 ? 1.6 * unit : .7 * unit;
-      context.beginPath();
+      const paths=[];
       if (options.side < 0) {
-        context.moveTo(-edge, inset);
-        context.bezierCurveTo(width * .24, inset + bend, width * .66, -edge * .36, width + edge, inset);
-        context.moveTo(-edge, height - inset);
-        context.bezierCurveTo(width * .3, height - inset - bend, width * .7, height + edge * .4, width + edge, height - inset);
+        paths.push([[-edge*.25,inset],[width*.08,inset+bend],[width*.19,inset-edge*.3],[width*(.25+progress*.065),inset-edge*.13]],
+          [[width+edge*.25,inset+edge*.5],[width*.92,inset+edge*.5-bend],[width*.81,inset+edge*.35],[width*(.75-progress*.065),inset+edge*.22]],
+          [[-edge*.25,height-edge*(.78-progress*.25)],[width*.04,height-edge*.75-bend],[width*.085,height-edge*.52],[width*(.1+progress*.035),height-edge*(.56-progress*.18)]],
+          [[width+edge*.25,height-edge*(.78-progress*.25)],[width*.96,height-edge*.75+bend],[width*.915,height-edge*.52],[width*(.9-progress*.035),height-edge*(.56-progress*.18)]]);
       } else {
-        context.moveTo(inset, -edge);
-        context.bezierCurveTo(inset + bend, height * .28, -edge * .36, height * .68, inset, height + edge);
-        context.moveTo(width - inset, -edge);
-        context.bezierCurveTo(width - inset - bend, height * .3, width + edge * .4, height * .72, width - inset, height + edge);
+        paths.push([[inset,-edge],[inset+bend,height*.28],[-edge*.36,height*.68],[inset,height+edge]],
+          [[width-inset,-edge],[width-inset-bend,height*.3],[width+edge*.4,height*.72],[width-inset,height+edge]]);
       }
-      context.stroke();
+      for(const points of paths){
+        if(!safePath(curvePoints(...points),options,context.lineWidth/2+1.5))continue;
+        context.beginPath();context.moveTo(...points[0]);context.bezierCurveTo(...points.slice(1).flat());context.stroke();marks++;
+      }
     }
-    return count;
+    return marks;
   }
 
   const renderers = {halftone, burst, orbit, split, circle, flow};
@@ -223,25 +271,15 @@
     const alpha = clamp(finite(options.envelope, 1));
     if (!density || !alpha) return 0;
     const rim = clamp(finite(options.rim, Math.min(width, height) * .15), 1, Math.min(width, height) * .47);
-    const config = {density, rim, side: options.side < 0 ? -1 : 1, phase: clamp(finite(options.phase, cycle(finite(seconds, 0), 12)))};
+    const safeRects=(options.safeRects||[]).filter(zone=>zone&&[zone.x,zone.y,zone.width,zone.height].every(Number.isFinite)&&zone.width>0&&zone.height>0);
+    const config = {density, rim, safeRects, side: options.side < 0 ? -1 : 1, phase: clamp(finite(options.phase, cycle(finite(seconds, 0), 12)))};
     const colours = {ink: palette.ink || '#111', paper: palette.paper || '#fcfbf7', accent: palette.accent || '#b71f30'};
     const kind = Object.hasOwn(renderers, options.kind) ? options.kind : 'halftone';
     context.save();
     try {
       context.globalAlpha *= alpha;
-      context.beginPath();
-      context.rect(0, 0, width, height);
-      context.rect(rim, rim, width - rim * 2, height - rim * 2);
-      context.clip('evenodd');
-      // Intersect one subtraction mask at a time. Overlapping exclusions remain
-      // empty rather than toggling back to ink under a combined evenodd path.
-      for (const zone of options.safeRects || []) {
-        if (!zone || ![zone.x, zone.y, zone.width, zone.height].every(Number.isFinite) || zone.width <= 0 || zone.height <= 0) continue;
-        context.beginPath();
-        context.rect(0, 0, width, height);
-        context.rect(zone.x, zone.y, zone.width, zone.height);
-        context.clip('evenodd');
-      }
+      // The canvas naturally clips at the viewport edge. Content protection is
+      // done per complete mark, never by rectangular subtraction or repainting.
       return renderers[kind](context, width, height, finite(seconds, 0), colours, config);
     } finally { context.restore(); }
   }

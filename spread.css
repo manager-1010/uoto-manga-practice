@@ -13,8 +13,8 @@
 .opening-hook>h1{font:56px/1.02 var(--display);letter-spacing:.015em}
 .opening-finish-voice{position:absolute;left:235px;top:500px;width:185px;padding:12px;font-size:25px;line-height:1.3;z-index:3}
 .opening-mobile-beat,.mobile-opening-title{display:none}
-.page-number{position:absolute;bottom:17px;right:25px;font:14px/1 var(--lettering);color:#777;z-index:4}
-.leaf:nth-child(even) .page-number{left:25px;right:auto}
+.page-number{position:absolute;bottom:17px;left:25px;right:auto;font:14px/1 var(--lettering);color:#777;z-index:4}
+.leaf:nth-child(even) .page-number{left:auto;right:25px}
 
 /* The thought and the figure share a diagonal panel over the gutter. */
 .reflection-image-cut{position:absolute;inset:0;clip-path:polygon(33.3333% 50.7143%,52.7778% 5%,96.6667% 9.2857%,98.3333% 68.2857%,52.2222% 74.2857%,33.3333% 95.7143%)}
